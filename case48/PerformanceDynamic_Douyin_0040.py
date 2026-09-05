@@ -44,23 +44,23 @@ class PerformanceDynamic_Douyin_0040(Case):
             SeaOfStarsAW.trace_thread.add_log('抖音', '启动抖音，上下滑动10次')
             # todo 微博的坐标地址要改下
             SeaOfStarsAW.ut_device.session().app_activate('com.ss.iphone.ugc.Aweme')
-            time.sleep(5)
+            time.sleep(3)
 
             # 2、上滑10次浏览页推荐视频
-            for i in range(10):
+            for i in range(2):
                 SeaOfStarsAW.ut_device.swipe_up()
-                time.sleep(2)
+                time.sleep(1)
 
             # 3、下滑10次浏览页推荐视频
-            for i in range(10):
+            for i in range(2):
                 SeaOfStarsAW.ut_device.swipe_down()
-                time.sleep(2)
+                time.sleep(1)
 
             # 4、搜索胡锡进
             SeaOfStarsAW.trace_thread.add_log('抖音', '搜索胡锡进')
             SeaOfStarsAW.ut_device.click(0.936, 0.086)
             time.sleep(1)
-            SeaOfStarsAW.ut_device().send_keys("胡锡进")
+            SeaOfStarsAW.ut_device.send_keys("胡锡进")
             time.sleep(2)
             SeaOfStarsAW.ut_device(labelContains="搜索").click()
             time.sleep(2)

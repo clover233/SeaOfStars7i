@@ -16,8 +16,7 @@ from case48.PerformanceDynamic_58city_0020 import PerformanceDynamic_58city_0020
 from case48.PerformanceDynamic_Alipay_0010 import PerformanceDynamic_Alipay_0010
 from case48.PerformanceDynamic_Alipay_0020 import PerformanceDynamic_Alipay_0020
 from case48.PerformanceDynamic_Alipay_0070 import PerformanceDynamic_Alipay_0070
-from case48.PerformanceDynamic_Appmarket_0010 import PerformanceDynamic_Appmarket_0010
-from case48.PerformanceDynamic_AttachedScreen_0020 import PerformanceDynamic_AttachedScreen_0020
+
 from case48.PerformanceDynamic_AutoNavi_0010 import PerformanceDynamic_AutoNavi_0010
 from case48.PerformanceDynamic_AutoNavi_0030 import PerformanceDynamic_AutoNavi_0030
 from case48.PerformanceDynamic_AutoNavi_0040 import PerformanceDynamic_AutoNavi_0040
@@ -25,16 +24,12 @@ from case48.PerformanceDynamic_AutoNavi_0050 import PerformanceDynamic_AutoNavi_
 from case48.PerformanceDynamic_AutoNavi_0060 import PerformanceDynamic_AutoNavi_0060
 from case48.PerformanceDynamic_Baidu_0010 import PerformanceDynamic_Baidu_0010
 from case48.PerformanceDynamic_Baidumap_0010 import PerformanceDynamic_Baidumap_0010
-from case48.PerformanceDynamic_Beiwanglu_0010 import PerformanceDynamic_Beiwanglu_0010
-from case48.PerformanceDynamic_Beiwanglu_0020 import PerformanceDynamic_Beiwanglu_0020
+
 from case48.PerformanceDynamic_Bilibili_0020 import PerformanceDynamic_Bilibili_0020
 from case48.PerformanceDynamic_Bilibili_0030 import PerformanceDynamic_Bilibili_0030
 from case48.PerformanceDynamic_Bilibili_0040 import PerformanceDynamic_Bilibili_0040
 from case48.PerformanceDynamic_Bilibili_0050 import PerformanceDynamic_Bilibili_0050
-from case48.PerformanceDynamic_Browser_0010 import PerformanceDynamic_Browser_0010
-from case48.PerformanceDynamic_Browser_0020 import PerformanceDynamic_Browser_0020
-from case48.PerformanceDynamic_Call_0010 import PerformanceDynamic_Call_0010
-from case48.PerformanceDynamic_Call_0020 import PerformanceDynamic_Call_0020
+
 from case48.PerformanceDynamic_Dongchedi_0020 import PerformanceDynamic_Dongchedi_0020
 from case48.PerformanceDynamic_Douyin_0010 import PerformanceDynamic_Douyin_0010
 from case48.PerformanceDynamic_Douyin_0030 import PerformanceDynamic_Douyin_0030
@@ -121,83 +116,10 @@ logger.addHandler(fh)
 succ_num = 0
 fail_num = 0
 Basic1 = [
-# PerformanceDynamic_58city_0010,
-# PerformanceDynamic_58city_0020,
-# PerformanceDynamic_Alipay_0010,
-# PerformanceDynamic_Alipay_0020,
-# PerformanceDynamic_Alipay_0070,
-# PerformanceDynamic_Appmarket_0010,
-# PerformanceDynamic_AttachedScreen_0020,
-# PerformanceDynamic_AutoNavi_0010,
-# PerformanceDynamic_AutoNavi_0030,
-# PerformanceDynamic_AutoNavi_0040,
-# PerformanceDynamic_AutoNavi_0050,
-# PerformanceDynamic_AutoNavi_0060,
-# PerformanceDynamic_Baidu_0010,
-# PerformanceDynamic_Baidumap_0010,
-# PerformanceDynamic_Beiwanglu_0010,
-# PerformanceDynamic_Beiwanglu_0020,
-# PerformanceDynamic_Bilibili_0020,
-# PerformanceDynamic_Bilibili_0030,
-# PerformanceDynamic_Bilibili_0040,
-# PerformanceDynamic_Bilibili_0050,
-# PerformanceDynamic_Browser_0010,
-# PerformanceDynamic_Browser_0020,
-# PerformanceDynamic_Call_0010,
-# PerformanceDynamic_Call_0020,
-# PerformanceDynamic_Dongchedi_0020,
-# PerformanceDynamic_Douyin_0010,
-# PerformanceDynamic_Douyin_0030,
-# PerformanceDynamic_Douyin_0040,
-# PerformanceDynamic_Douyin_0050,
-# PerformanceDynamic_fanqie_0010,
-# PerformanceDynamic_fanqie_0020,
-# PerformanceDynamic_hanglvzongheng_0010,
-# PerformanceDynamic_hanglvzongheng_0020,
-# PerformanceDynamic_HappyAnimal_0010,
-# PerformanceDynamic_hepingjingying_0030,
-# PerformanceDynamic_jrtt_0010,
-# PerformanceDynamic_jrtt_0020,
-# PerformanceDynamic_kiwi_0010,
-# PerformanceDynamic_kiwi_0020,
-# PerformanceDynamic_kiwi_0030,
-# PerformanceDynamic_Kuaishou_0010,
-# PerformanceDynamic_Kuaishou_0020,
-# PerformanceDynamic_mangguoTV_0010,
-# PerformanceDynamic_meituan_0010,
-]
-Basic_fbh =[
-    # PerformanceDynamic_Weibo_0010,
-    # PerformanceDynamic_Weibo_0020,
-    # PerformanceDynamic_Weibo_0030,
-    # PerformanceDynamic_Weibo_0040,
-    # PerformanceDynamic_weipinhui_0010,
-    # PerformanceDynamic_weipinhui_0020,
-    # PerformanceDynamic_weipinhui_0030,
-    # PerformanceDynamic_wpsoffice_0010,
-    # PerformanceDynamic_wpsoffice_0020,
-    PerformanceDynamic_xhs_0010,
-    PerformanceDynamic_xhs_0020,
-    PerformanceDynamic_xhs_0030,
-    PerformanceDynamic_xhs_0040,
-    PerformanceDynamic_xianyu_0010,
-    PerformanceDynamic_xianyu_0020,
-    PerformanceDynamic_xiechengTrip_0010,
-    PerformanceDynamic_xiechengTrip_0020,
-    PerformanceDynamic_ximalaya_0010,
-    PerformanceDynamic_ximalaya_0020,
-    PerformanceDynamic_xuexiqiangguo_0010,
-    PerformanceDynamic_xuexiqiangguo_0020,
-    PerformanceDynamic_youku_0010,
-    PerformanceDynamic_youku_0020,
-    PerformanceDynamic_zhihu_0030,
-    PerformanceDynamic_zhongzai_0010,
-    PerformanceDynamic_zhongzai_0020,
-    PerformanceDynamic_zuoyebang_0010,
-    PerformanceDynamic_zuoyebang_0020,
+PerformanceDynamic_Douyin_0040,
 ]
 
-Basics=[Basic1,Basic_fbh]
+Basics=[Basic1]
 
 # 按装订区域中的绿色按钮以运行脚本。
 if __name__ == '__main__':
