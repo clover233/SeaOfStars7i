@@ -4,14 +4,27 @@ import time
 import logging
 import signal
 import subprocess
+from pathlib import Path
 
-logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
-# logging.getLogger('matplotlib.font_manager').disabled = True
-formatter = logging.Formatter('%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s')
-sh = logging.StreamHandler()
-sh.setFormatter(formatter)
-logger.addHandler(sh)
+def xctrace_environment():
+    """保留显式配置；系统仅有CommandLineTools时查找完整Xcode。"""
+    env = os.environ.copy()
+    if env.get('DEVELOPER_DIR'):
+        return env
+    selected = subprocess.run(
+        ['/usr/bin/xcode-select', '-p'], capture_output=True, text=True)
+    developer_dir = Path(selected.stdout.strip())
+    if selected.returncode == 0 and (developer_dir / 'usr/bin/xctrace').is_file():
+        return env
+    for directory in (Path('/Applications'), Path.home() / 'Applications',
+                      Path.home() / 'Downloads'):
+        for app in sorted(directory.glob('Xcode*.app')):
+            developer_dir = app / 'Contents/Developer'
+            if (developer_dir / 'usr/bin/xctrace').is_file():
+                env['DEVELOPER_DIR'] = str(developer_dir)
+                logging.info('Trace使用Xcode路径: %s', developer_dir)
+                return env
+    raise OSError('未找到完整Xcode，请安装Xcode或设置DEVELOPER_DIR为其Contents/Developer路径')
 
 
 class iTraceThread(threading.Thread):
@@ -23,14 +36,21 @@ class iTraceThread(threading.Thread):
         self.realStartTrace = False
         self.start_time = None
         self.log_path = None
+        self.start_error = None
 
     def start_trace(self, trace_dir, trace_name):
         self.save_dir = trace_dir
         self.save_name = trace_name
+        self.start_error = None
+        self.realStartTrace = False
         self.isLetTraceRun = True
         self.process = None
         # 等待Trace真正采集
         while not self.realStartTrace:
+            if self.start_error:
+                raise RuntimeError(self.start_error)
+            if not self.is_alive():
+                raise RuntimeError('Trace线程已退出，无法启动采集')
             time.sleep(0.1)
 
     def stop_trace(self):
@@ -49,7 +69,6 @@ class iTraceThread(threading.Thread):
             logging.info("Trace进程未运行！无需停止.")
 
     def run(self):
-        global start_time_stamp, capture_time
         logging.info("trace线程开始运行")
         while 1:
             tips_bool = False
@@ -58,6 +77,8 @@ class iTraceThread(threading.Thread):
                 tips_bool = True
                 logging.info("trace线程开始抓取trace")
                 end_time = None
+                start_time_stamp = None
+                self.start_time = None
                 time_stamp = time.strftime("%Y%m%d_%H%M%S", time.localtime())
                 temptrace_path = os.path.join(self.save_dir, "temp_{}.trace".format(time_stamp))
                 self.log_path = os.path.join(self.save_dir, "temp_{}.log".format(time_stamp))
@@ -65,12 +86,23 @@ class iTraceThread(threading.Thread):
                     os.remove(self.log_path)
                 # command = ['xctrace', 'record', '--device-name', 'iPhone (16.3.1)', '--template', 'UX-HitchAndMetal',
                 #            '--all-processes', '--output', temptrace_path, "--time-limit", '410s']
-                command = ['xctrace', 'record', '--device-name', 'iPhoned (18.5)', '--template',
-                           'UX-HitchAndMetal','--all-processes', '--output', temptrace_path, "--time-limit", '410s']
-                self.process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-                while self.process.poll() is None:
-                    line = self.process.stdout.readline().strip().decode("utf8")
+                template_path = Path(__file__).resolve().parent / 'Templates' / 'ActivityMonitor.tracetemplate'
+                command = ['xctrace', 'record', '--device-name', 'iPhone17PM (26.0)', '--template',
+                           str(template_path), '--all-processes', '--output', temptrace_path, "--time-limit", '410s']
+                try:
+                    if not template_path.is_file():
+                        raise FileNotFoundError('采集模板不存在: {}'.format(template_path))
+                    self.process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                                    env=xctrace_environment())
+                except OSError as err:
+                    self.start_error = '无法启动xctrace: {}'.format(err)
+                    self.isLetTraceRun = False
+                    break
+                output_lines = []
+                for raw_line in self.process.stdout:
+                    line = raw_line.strip().decode("utf8", errors="replace")
                     if line != '':
+                        output_lines.append(line)
                         if "Ctrl-C" in line:
                             # trace真正开始的时间
                             self.start_time = time.time()
@@ -81,12 +113,16 @@ class iTraceThread(threading.Thread):
                             # trace真正结束的时间
                             end_time = time.time()
                         logging.info(line)
+                return_code = self.process.wait()
                 self.process = None
                 self.realStartTrace = False
-                try:
-                    capture_time = time.time() - self.start_time
-                except:
-                    pass
+                if start_time_stamp is None:
+                    self.start_error = 'xctrace未开始采集（退出码{}）: {}'.format(
+                        return_code, '\n'.join(output_lines))
+                    self.isLetTraceRun = False
+                    logging.error(self.start_error)
+                    break
+                capture_time = time.time() - self.start_time
                 if end_time:
                     # 真正的采集时间
                     capture_time = end_time - self.start_time
@@ -104,6 +140,7 @@ class iTraceThread(threading.Thread):
                 # os.rename(trace_path, new_trace_path)
             if tips_bool:
                 logging.info("等待trace抓取命令......")
+            time.sleep(0.1)
 
     # kargs为场景动作参数,比如入参为 抖音,应用启动,  最后会以[抖音][应用启动]形式保存, 建议至少两个参数, 参数数量尽量保持一致
     def add_log(self, *kargs):
@@ -119,6 +156,9 @@ class iTraceThread(threading.Thread):
 
 
 if __name__ == "__main__":
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s')
     # trace抓取线程启动
     t_thread = iTraceThread()
     t_thread.start()
@@ -131,4 +171,3 @@ if __name__ == "__main__":
     time.sleep(3)
     # 停止抓取 - 这里会根据抓取时间，会等待10s-80s左右
     t_thread.stop_trace()
-

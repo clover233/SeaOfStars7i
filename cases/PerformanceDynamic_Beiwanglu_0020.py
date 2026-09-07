@@ -6,7 +6,7 @@ from aw import SeaOfStarsAW
 from cases.CaseBase import Case
 
 
-class PerformanceDynamic_Beiwanglu_0020(Case):
+class PerformanceDynamic_beiwanglu_0020(Case):
     all_app_package_list = ['']
     TEST_TIME = 1
 

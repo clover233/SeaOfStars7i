@@ -9,14 +9,10 @@ class Case(object):
         self.result_dir_path = os.path.join(result_path, self.__class__.__name__+'_'+time_stamp)
         self.trace_dir_path = os.path.join(self.result_dir_path, 'Traces')
         self.screenshot_dir_path = os.path.join(self.result_dir_path, 'Screenshots')
-        SeaOfStarsAW.error_screenshot_path = os.path.join(result_path, 'error_screenshots')
-        SeaOfStarsAW.public_screen_shot_dir = os.path.join(result_path, "public_screenshots")
+        SeaOfStarsAW.error_screenshot_path = self.screenshot_dir_path
+        SeaOfStarsAW.public_screen_shot_dir = self.screenshot_dir_path
         os.makedirs(self.trace_dir_path)
         os.makedirs(self.screenshot_dir_path)
-        if not os.path.exists(SeaOfStarsAW.public_screen_shot_dir):
-            os.makedirs(SeaOfStarsAW.public_screen_shot_dir)
-        if not os.path.exists(SeaOfStarsAW.error_screenshot_path):
-            os.makedirs(SeaOfStarsAW.error_screenshot_path)
         logger = logging.getLogger()
         formatter = logging.Formatter('%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s')
         self.fh = logging.FileHandler(os.path.join(self.result_dir_path, 'log.txt'), encoding='utf-8')

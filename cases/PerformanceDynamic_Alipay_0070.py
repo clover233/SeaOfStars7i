@@ -5,7 +5,7 @@ from aw import SeaOfStarsAW
 from cases.CaseBase import Case
 
 
-class PerformanceDynamic_Alipay_0070(Case):
+class PerformanceDynamic_alipay_0070(Case):
     all_app_package_list = ['']
     TEST_TIME = 1
 

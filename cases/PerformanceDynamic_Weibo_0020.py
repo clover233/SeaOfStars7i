@@ -6,7 +6,7 @@ from aw import SeaOfStarsAW
 from cases.CaseBase import Case
 
 
-class PerformanceDynamic_Weibo_0020(Case):
+class PerformanceDynamic_weibo_0020(Case):
     all_app_package_list = ['']
     TEST_TIME = 1
 
