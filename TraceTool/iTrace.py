@@ -65,8 +65,6 @@ class iTraceThread(threading.Thread):
                     os.remove(self.log_path)
                 # command = ['xctrace', 'record', '--device-name', 'iPhone (16.3.1)', '--template', 'UX-HitchAndMetal',
                 #            '--all-processes', '--output', temptrace_path, "--time-limit", '410s']
-                # command = ['xctrace', 'record', '--device-name', 'iPhone15qin (17.5.1)', '--template', 'UX-HitchAndMetal',
-                #            '--all-processes', '--output', temptrace_path, "--time-limit", '410s']
                 command = ['xctrace', 'record', '--device-name', 'iPhoned (18.5)', '--template',
                            'UX-HitchAndMetal','--all-processes', '--output', temptrace_path, "--time-limit", '410s']
                 self.process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
