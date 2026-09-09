@@ -17,7 +17,9 @@ logger.addHandler(sh)
 class iTraceThread(threading.Thread):
 
     def __init__(self):
-        threading.Thread.__init__(self)
+        # Trace worker must not keep the whole test process alive after all
+        # selected cases have finished.
+        threading.Thread.__init__(self, daemon=True)
         self.isLetTraceRun = False
         self.process = None
         self.realStartTrace = False
@@ -131,4 +133,3 @@ if __name__ == "__main__":
     time.sleep(3)
     # 停止抓取 - 这里会根据抓取时间，会等待10s-80s左右
     t_thread.stop_trace()
-

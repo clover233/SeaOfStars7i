@@ -124,11 +124,25 @@ class SeaOfStarsAW:
 
     @staticmethod
     def init_device(result_dir_path=None, serial_no=None):
-        device = wda.Client('http://localhost:8100')
+        wda_url = os.environ.get('WDA_URL', 'http://127.0.0.1:8100')
+        device = wda.Client(wda_url)
         # wda.DEBUG = True
 
+        try:
+            status = device.status()
+        except Exception as err:
+            raise ConnectionError(
+                '无法连接 WebDriverAgent（{}）。请确认 Xcode 中 WDA 正在运行，'
+                '并已执行 iproxy 8100 8100。'.format(wda_url)
+            ) from err
+
+        if not status.get('ready'):
+            raise ConnectionError(
+                'WebDriverAgent 已响应，但尚未就绪：{}'.format(status)
+            )
+
         SeaOfStarsAW.ut_device = device
-        logging.info("设备连接成功")
+        logging.info("设备连接成功: %s", wda_url)
 
         return True
 
@@ -292,5 +306,4 @@ class ElementNotFoundError(Exception):
 
     def __str__(self):
         return self.errorInfo
-
 

@@ -657,7 +657,103 @@ Basic5 = [
 ]
 
 # Basics = [Basic1, Basic2, Basic3, Basic4, Basic5]
-Basics = [Basic1]
+
+Basic = [
+    PerformanceDynamic_fanqiechangting_0010,
+    PerformanceDynamic_hongguomianfeiduanju_0010,
+    PerformanceDynamic_hongguomianfeiduanju_0020,
+    PerformanceDynamic_huaweiHealth_0010,
+    PerformanceDynamic_huaweiHealth_0020,
+    PerformanceDynamic_hwvmall_0010,
+    PerformanceDynamic_hwvmall_0020,
+    PerformanceDynamic_mms_0010,
+  
+    PerformanceDynamic_qianwen_0010,
+    PerformanceDynamic_qqm_0040,  
+    PerformanceDynamic_qqm_0050,  
+    
+    # PerformanceDynamic_weixin_0010,
+    # PerformanceDynamic_weixin_0030,
+    # PerformanceDynamic_Douyin_0010,
+    # PerformanceDynamic_weixin_0040,
+
+    # PerformanceDynamic_weixin_0120,
+
+    # PerformanceDynamic_weixin_0030,
+    # PerformanceDynamic_qq_0020,
+    # PerformanceDynamic_weixin_0010,
+    # PerformanceDynamic_Douyinjisu_0010,
+    # PerformanceDynamic_meituan_0010,
+    # PerformanceDynamic_Douyin_0030,
+    # PerformanceDynamic_bilibili_0040,
+    # PerformanceDynamic_weixin_0040,
+    # PerformanceDynamic_doubao_0010,
+    # PerformanceDynamic_jingdong_0040,
+    # PerformanceDynamic_weixin_0120,
+    # PerformanceDynamic_ths_0040,
+    # PerformanceDynamic_xianyu_0010,
+    # PerformanceDynamic_weixin_0030,
+    # PerformanceDynamic_AutoNavi_0070,
+    # PerformanceDynamic_weixin_0010,
+    # PerformanceDynamic_Douyin_0010,
+    # PerformanceDynamic_pinduoduo_0010,
+    # PerformanceDynamic_Douyin_0090,
+    # PerformanceDynamic_weixin_0040,
+    # PerformanceDynamic_meituan_0080,
+    # PerformanceDynamic_eggparty_0010,
+    # PerformanceDynamic_weixin_0120,
+    # PerformanceDynamic_momo_0010,
+    # PerformanceDynamic_AutoNavi_0080,
+    # PerformanceDynamic_jrtt_0010,
+    # PerformanceDynamic_weixin_0030,
+    # PerformanceDynamic_AutoNavi_0060,
+    # PerformanceDynamic_xhs_0030,
+    # PerformanceDynamic_Douyin_0040,
+    # PerformanceDynamic_weixin_0010,
+    # PerformanceDynamic_hwvmall_0020,
+    # PerformanceDynamic_qq_0010,
+    # PerformanceDynamic_fanqiechangting_0010,
+    # PerformanceDynamic_weixin_0040,
+    # PerformanceDynamic_Douyinjisu_0010,
+    # PerformanceDynamic_wpsoffice_0020,
+    # PerformanceDynamic_weipinhui_0030,
+    # PerformanceDynamic_weixin_0120,
+    # PerformanceDynamic_qunaer_0010,
+    # PerformanceDynamic_ths_0050,
+    # PerformanceDynamic_weixin_0030,
+    # PerformanceDynamic_Alipay_0010,
+    # PerformanceDynamic_Douyin_0010,
+    # PerformanceDynamic_weixin_0010,
+    # PerformanceDynamic_jingdong_0010,
+    # PerformanceDynamic_taptap_0010,
+    # PerformanceDynamic_weixin_0040,
+    # PerformanceDynamic_Alipay_0020,
+    # PerformanceDynamic_Weibo_0030,
+    # PerformanceDynamic_Alipay_0010,
+    # PerformanceDynamic_hongguomianfeiduanju_0010,
+    # PerformanceDynamic_weixin_0120,
+    # PerformanceDynamic_bilibili_0030,
+    # PerformanceDynamic_Weibo_0020,
+    # PerformanceDynamic_pinduoduo_0010,
+    # PerformanceDynamic_weixin_0030,
+    # PerformanceDynamic_Douyin_0030,
+    # PerformanceDynamic_yuanbao_0010,
+    # PerformanceDynamic_tencentnews_0010,
+    # PerformanceDynamic_weixin_0150,
+    # PerformanceDynamic_taobao_0010,
+    # PerformanceDynamic_zuoyebang_0010,
+    # PerformanceDynamic_Kuaishou_0010,
+    # PerformanceDynamic_weixin_0170,
+    # PerformanceDynamic_CloudFlashPay_0010,
+    # PerformanceDynamic_baidu_0010,
+    # PerformanceDynamic_weixin_0140,
+    # PerformanceDynamic_fanqiechangting_0010,
+    # PerformanceDynamic_Douyinjisu_0010,
+
+    # PerformanceDynamic_Douyin_0010,
+    # PerformanceDynamic_weixin_0190,
+]
+Basics = [Basic]
 
 # 按装订区域中的绿色按钮以运行脚本。
 if __name__ == '__main__':
@@ -696,7 +792,10 @@ if __name__ == '__main__':
                         time.sleep(5)
                         SeaOfStarsAW.stop_trace()
                     finally:
-                        SeaOfStarsAW.ut_device.home()
+                        try:
+                            SeaOfStarsAW.ut_device.home()
+                        except Exception as home_err:
+                            logging.error('用例清理时返回主屏幕失败: %s', home_err)
                         #SeaOfStarsAW.swipe_to_launcher()
                         #SeaOfStarsAW.go_home()
                         df = pd.DataFrame(result_dict)
