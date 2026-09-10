@@ -13,6 +13,7 @@ from aw import ElementNotFoundError
 
 from cases.PerformanceDynamic_alipay_0010 import PerformanceDynamic_alipay_0010
 from cases.PerformanceDynamic_alipay_0020 import PerformanceDynamic_alipay_0020
+from cases.PerformanceDynamic_alipay_0030 import PerformanceDynamic_alipay_0030
 from cases.PerformanceDynamic_alipay_0070 import PerformanceDynamic_alipay_0070
 from cases.PerformanceDynamic_autonavi_0010 import PerformanceDynamic_autonavi_0010
 from cases.PerformanceDynamic_autonavi_0030 import PerformanceDynamic_autonavi_0030
@@ -21,6 +22,8 @@ from cases.PerformanceDynamic_autonavi_0050 import PerformanceDynamic_autonavi_0
 from cases.PerformanceDynamic_autonavi_0060 import PerformanceDynamic_autonavi_0060
 from cases.PerformanceDynamic_baidu_0010 import PerformanceDynamic_baidu_0010
 from cases.PerformanceDynamic_baidumap_0010 import PerformanceDynamic_baidumap_0010
+from cases.PerformanceDynamic_beiwanglu_0010 import PerformanceDynamic_beiwanglu_0010
+from cases.PerformanceDynamic_beiwanglu_0020 import PerformanceDynamic_beiwanglu_0020
 from cases.PerformanceDynamic_bilibili_0020 import PerformanceDynamic_bilibili_0020
 from cases.PerformanceDynamic_bilibili_0030 import PerformanceDynamic_bilibili_0030
 from cases.PerformanceDynamic_bilibili_0040 import PerformanceDynamic_bilibili_0040
@@ -658,7 +661,10 @@ Basic5 = [
 ]
 
 Basic0 = [
-    PerformanceDynamic_fuzai,
+    PerformanceDynamic_autonavi_0050,
+    PerformanceDynamic_autonavi_0060,
+    PerformanceDynamic_autonavi_0070,
+    PerformanceDynamic_autonavi_0080,
 ]
 
 # Basics = [Basic1, Basic2, Basic3, Basic4, Basic5]

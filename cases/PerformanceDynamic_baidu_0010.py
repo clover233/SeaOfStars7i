@@ -1,82 +1,35 @@
-import logging
-import time
-from threading import Timer
 from aw import SeaOfStarsAW
-from cases.CaseBase import Case
+from cases.baidu_common import BaiduCase
 
 
-class PerformanceDynamic_baidu_0010(Case):
-    all_app_package_list = ['']
-    TEST_TIME = 1
-
-    def __init__(self, result_path):
-        super().__init__(result_path)
-        SeaOfStarsAW.current_running_class_name = self.__class__.__name__
-
-    @SeaOfStarsAW.function_log
-    def set_up(self):
-        logging.info('测试环境开始准备')
-        phone_app_list = SeaOfStarsAW.get_app_list()
-        for per_app in self.all_app_package_list:
-            if per_app not in phone_app_list:
-                return False
+class PerformanceDynamic_baidu_0010(BaiduCase):
+    """Excel 7.0.2：百度浏览器浏览搜索结果。"""
 
     @SeaOfStarsAW.function_log
     def run_case(self):
-        """
-        测试用例执行
-        """
-        logging.info("用例开始执行")
-        if SeaOfStarsAW.ut_device.locked():
-            SeaOfStarsAW.ut_device.unlock()
-            time.sleep(2)
-        for test_time in range(0, self.TEST_TIME):
-            step = 0
-
-            # 启动百度，停留2S
-            # 建议停留3s 跳过3秒广告
-            logging.info('1、启动百度')
-            SeaOfStarsAW.trace_thread.add_log('百度', '启动百度')
-            SeaOfStarsAW.ut_device.session().app_activate('com.baidu.BaiduMobile')
-            time.sleep(2)
-
-            # 输入“华为手机”并搜索，停留2S
-            # 不建议ai模式搜索
-            logging.info('2、输入“华为手机”并搜索')
-            SeaOfStarsAW.trace_thread.add_log('百度', '输入“华为手机”并搜索')
-            SeaOfStarsAW.ut_device.click(0.172, 0.099, 0.2)
-            time.sleep(1)
-            SeaOfStarsAW.ut_device().set_text("华为手机")
-            time.sleep(2)
-            SeaOfStarsAW.ut_device.click(0.87, 0.099, 0.2)
-            SeaOfStarsAW.ut_device.click(0.845, 0.14, 0.2)
-            time.sleep(1)
-
-            # 向下滑动6次，停留2S
-            logging.info('3、向下滑动6次')
-            SeaOfStarsAW.trace_thread.add_log('百度', '向下滑动6次')
-            for i in range(6):
-                SeaOfStarsAW.ut_device.swipe_up()
-                time.sleep(2)
-
-            # 向上滑动6次至底部，停留2S
-            logging.info('4、向上滑动6次')
-            SeaOfStarsAW.trace_thread.add_log('百度', '向上滑动6次')
-            for i in range(6):
-                SeaOfStarsAW.ut_device.swipe_down()
-                time.sleep(2)
-
-            # 侧滑返回首页，停留2S
-            logging.info('5、侧滑返回首页')
-            SeaOfStarsAW.trace_thread.add_log('百度', '侧滑返回首页')
-            SeaOfStarsAW.ut_device.swipe(0.010, 0.809, 0.933, 0.805, 0.5)
-            time.sleep(2)
-
-            # 返回桌面
-            logging.info('6、返回桌面')
-            SeaOfStarsAW.trace_thread.add_log('百度', '返回桌面')
-            SeaOfStarsAW.ut_device.home()
-            SeaOfStarsAW.ut_device.app_terminate('com.baidu.BaiduMobile')
-            time.sleep(1)
-
-        logging.info('用例执行结束')
+        for iteration in range(self.TEST_TIME):
+            with self.capture_trace(iteration, 1):
+                self.step(1, '启动百度浏览器')
+                self.start_baidu()
+            self.step(2, '点击底部文心一言')
+            self.open_wenxin()
+            self.step(3, '输入西安三天旅行攻略进行问答')
+            self.ask_wenxin('西安三天旅行攻略')
+            self.step(4, '返回百度主界面')
+            self.return_baidu_home()
+            self.step(5, '点击搜索框，拉起输入法')
+            self.tap('SearchBox_test', fallback=(0.35, 0.09), wait=1)
+            self.step(6, '输入西安百度百科点击搜索')
+            self.enter_text('西安百度百科', clear=True)
+            self.tap('Search', 'sug_search_button', fallback=(0.87, 0.895), wait=6)
+            self.step(7, '浏览搜索结果，上滑5次，下滑5次')
+            self.browse(5, 5)
+            self.step(8, '点击第一个搜索结果查看详情')
+            self.open_first_baike_result()
+            self.step(9, '上滑5次，下滑5次，查看搜索结果')
+            self.browse(5, 5)
+            self.step(10, '返回百度主界面')
+            self.return_baidu_home()
+            with self.capture_trace(iteration, 11):
+                self.step(11, '滑动返回Home页')
+                self.launcher()

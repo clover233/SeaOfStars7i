@@ -1,87 +1,42 @@
-import logging
-import time
-from threading import Timer
 from aw import SeaOfStarsAW
-from cases.CaseBase import Case
+from cases.autonavi_common import AutonaviCase
 
 
-class PerformanceDynamic_autonavi_0050(Case):
-    all_app_package_list = ['']
-    TEST_TIME = 1
-
-    def __init__(self, result_path):
-        super().__init__(result_path)
-        SeaOfStarsAW.current_running_class_name = self.__class__.__name__
-
-    @SeaOfStarsAW.function_log
-    def set_up(self):
-        logging.info('测试环境开始准备')
-        phone_app_list = SeaOfStarsAW.get_app_list()
-        for per_app in self.all_app_package_list:
-            if per_app not in phone_app_list:
-                return False
+class PerformanceDynamic_autonavi_0050(AutonaviCase):
+    """Excel 7.0.2：浏览地图并查看西安钟楼打车车型。"""
 
     @SeaOfStarsAW.function_log
     def run_case(self):
-        """
-        测试用例执行
-        """
-        logging.info("用例开始执行")
-        if SeaOfStarsAW.ut_device.locked():
-            SeaOfStarsAW.ut_device.unlock()
-            time.sleep(2)
-        for test_time in range(0, self.TEST_TIME):
-            step = 0
-
-            # 1、启动高德地图（停留7s）
-            logging.info('1、应用启动')
-            SeaOfStarsAW.trace_thread.add_log('高德地图', '应用启动')
-            SeaOfStarsAW.ut_device.session().app_activate('com.autonavi.amap')
-            time.sleep(7)
-            SeaOfStarsAW.ut_device.click(0.497, 0.243, 0.50)
-            time.sleep(1)
-
-            # 2、地图界面上滑1次浏览（停留3s）
-            logging.info('2、地图界面上滑1次浏览')
-            SeaOfStarsAW.trace_thread.add_log('高德地图', '地图界面上滑1次浏览')
-            SeaOfStarsAW.ut_device.swipe_up()
-            time.sleep(3)
-
-            # 3、地图界面下滑1次浏览（停留3s）
-            logging.info('3、地图界面下滑1次浏览')
-            SeaOfStarsAW.trace_thread.add_log('高德地图', '地图界面下滑1次浏览')
-            SeaOfStarsAW.ut_device.swipe_down()
-            time.sleep(3)
-
-            # 4、地图界面左滑1次浏览（停留3s）
-            logging.info('4、地图界面左滑1次浏览')
-            SeaOfStarsAW.trace_thread.add_log('高德地图', '地图界面左滑1次浏览')
-            SeaOfStarsAW.ut_device.swipe_left()
-            time.sleep(3)
-
-            # 5、地图界面右滑1次浏览（停留3s）
-            logging.info('5、地图界面右滑1次浏览')
-            SeaOfStarsAW.trace_thread.add_log('高德地图', '地图界面右滑1次浏览')
-            SeaOfStarsAW.ut_device.swipe_right()
-            time.sleep(3)
-
-            # 6、双指捏合放大/缩小当前位置地图（停留3s）
-            # 目前为双击放大，建议后期换成WDA的二指放大
-            logging.info('6、双指捏合放大/缩小当前位置地图')
-            SeaOfStarsAW.trace_thread.add_log('高德地图', '双指捏合放大/缩小当前位置地图')
-            SeaOfStarsAW.ut_device.double_tap(0.500, 0.500)
-            time.sleep(3)
-
-            # 7、左滑退出首页（停留1s）
-            logging.info('7、左滑退出首页')
-            SeaOfStarsAW.trace_thread.add_log('高德地图', '左滑退出首页')
-            SeaOfStarsAW.ut_device.swipe(0.010, 0.809, 0.933, 0.805, 0.5)
-            time.sleep(1)
-
-            # 8、上滑返回桌面
-            logging.info('8、上滑返回桌面')
-            SeaOfStarsAW.trace_thread.add_log('高德地图', '上滑返回桌面')
-            SeaOfStarsAW.ut_device.home()
-            SeaOfStarsAW.ut_device.app_terminate('com.autonavi.amap')
-
-        logging.info('用例执行结束')
+        for iteration in range(self.TEST_TIME):
+            with self.capture_trace(iteration, 1):
+                self.step(1, '启动高德地图')
+                self.start_autonavi()
+            self.step(2, '地图界面上滑1次浏览')
+            self.browse(1, 0)
+            self.step(3, '地图界面下滑1次浏览')
+            self.browse(0, 1)
+            self.step(4, '地图界面左滑1次浏览')
+            self.device.swipe(0.75, 0.5, 0.25, 0.5, 0.3)
+            self.step(5, '地图界面右滑1次浏览')
+            self.device.swipe(0.25, 0.5, 0.75, 0.5, 0.3)
+            self.step(6, '双指捏合放大，缩小当前位置地图')
+            self.pinch_map()
+            self.step(7, '点击下方打车tab页')
+            self.open_taxi_tab()
+            self.step(8, '点击目的地')
+            self.tap('你要去哪儿', fallback=(0.25, 0.60), wait=2)
+            self.step(9, '输入西安钟楼，搜索')
+            self.enter_search_text('西安钟楼')
+            self.step(10, '选择售票处')
+            self.tap('售票处', wait=4)
+            self.step(11, '选择下车点')
+            self.tap('在这下车', wait=5)
+            self.step(12, '上滑3次，下滑3次，浏览车型')
+            self.browse(3, 3)
+            self.step(13, '滑动返回打车tab页')
+            self.device.swipe(0.01, 0.5, 0.85, 0.5, 0.3)
+            self.step(14, '点击回到高德首页')
+            self.return_autonavi_home()
+            with self.capture_trace(iteration, 15):
+                self.step(15, '滑动返回桌面')
+                self.launcher()
