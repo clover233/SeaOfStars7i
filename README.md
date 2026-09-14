@@ -6,9 +6,14 @@
 
 在终端执行：
 
+```bash
 
-python3 -m pip install pandas facebook-wda tidevice3 weditor
+python3 -m pip install pandas -i https://pypi.tuna.tsinghua.edu.cn/simple
+python3 -m pip install facebook-wda
+python3 -m pip install tidevice3
+python3 -m pip install weditor
 
+```
 
 - `pandas`：处理测试数据。
 - `facebook-wda`：通过 Python 调用 WebDriverAgent（WDA）。
