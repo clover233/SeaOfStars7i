@@ -22,7 +22,8 @@ python3 -m pip install weditor
 
 ### 2. 连接 iPhone
 
-通过 USB 连接 iPhone，解锁设备并信任电脑。确保设备已开启开发者模式，并已安装、信任签名后的 WebDriverAgent。
+通过 USB 连接 iPhone，解锁设备并信任电脑。
+确保设备已开启开发者模式，并已安装、信任签名后的 WebDriverAgent。
 
 ### 3. 启动设备隧道
 
@@ -57,6 +58,8 @@ weditor
 ## iPhone17 第 2–6 页 App 包名
 
 来源：2026-09-07 从已连接设备的 SpringBoard 桌面布局直接读取。页码从主屏幕第 1 页起算，底部 Dock 不计入页码。共 81 个 App，按桌面图标顺序排列。
+
+Excel表中黄色为需要注意的地方。
 
 ### 第 2 页（16 个）
 
