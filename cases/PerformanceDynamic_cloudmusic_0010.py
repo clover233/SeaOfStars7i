@@ -1,47 +1,26 @@
-import logging
-import time
-import openpyxl
-from threading import Timer
 from aw import SeaOfStarsAW
-from cases.CaseBase import Case
+from cases.cloudmusic_common import CloudMusicCase
 
 
-class PerformanceDynamic_cloudmusic_0010(Case):
-    all_app_package_list = ['']
-    TEST_TIME = 1
-
-    def __init__(self, result_path):
-        super().__init__(result_path)
-        SeaOfStarsAW.current_running_class_name = self.__class__.__name__
-
-    @SeaOfStarsAW.function_log
-    def set_up(self):
-        logging.info('测试环境开始准备')
-        phone_app_list = SeaOfStarsAW.get_app_list()
-        for per_app in self.all_app_package_list:
-            if per_app not in phone_app_list:
-                return False
-        # 清空后台
+class PerformanceDynamic_cloudmusic_0010(CloudMusicCase):
+    """Excel 7.0.2：网易云音乐浏览并播放推荐歌单。"""
 
     @SeaOfStarsAW.function_log
     def run_case(self):
-        """
-        测试用例执行
-        """
-        logging.info("用例开始执行")
-        if SeaOfStarsAW.ut_device.locked():
-            SeaOfStarsAW.ut_device.unlock()
-            time.sleep(2)
-
-        for test_time in range(0, self.TEST_TIME):
-            step = 0
-
-            SeaOfStarsAW.start_trace(
-                self.trace_dir_path,
-                self.__class__.__name__,
-                'step_' + str(step),
-                self.screenshot_dir_path,
-            )
-            app_name = "xxxx"
-
-        logging.info('用例执行结束')
+        for iteration in range(self.TEST_TIME):
+            with self.capture_trace(iteration, 1):
+                self.step(1, '启动网易云音乐')
+                self.start_cloudmusic()
+            self.step(2, '首页浏览，上滑2次，下滑2次，重复2次')
+            self.browse_home()
+            self.step(3, '点击雷达歌单下的第一个歌单')
+            self.open_first_playlist()
+            self.step(4, '播放全部')
+            self.play_all()
+            self.step(5, '点击下一首，重复5次')
+            self.next_tracks(5)
+            self.step(6, '暂停播放')
+            self.pause_playback()
+            with self.capture_trace(iteration, 7):
+                self.step(7, '滑动返回Home页')
+                self.launcher()

@@ -1,47 +1,30 @@
-import logging
-import time
-import openpyxl
-from threading import Timer
 from aw import SeaOfStarsAW
-from cases.CaseBase import Case
+from cases.yuanbao_common import YuanbaoCase
 
 
-class PerformanceDynamic_yuanbao_0010(Case):
-    all_app_package_list = ['']
-    TEST_TIME = 1
-
-    def __init__(self, result_path):
-        super().__init__(result_path)
-        SeaOfStarsAW.current_running_class_name = self.__class__.__name__
-
-    @SeaOfStarsAW.function_log
-    def set_up(self):
-        logging.info('测试环境开始准备')
-        phone_app_list = SeaOfStarsAW.get_app_list()
-        for per_app in self.all_app_package_list:
-            if per_app not in phone_app_list:
-                return False
-        # 清空后台
+class PerformanceDynamic_yuanbao_0010(YuanbaoCase):
+    """Excel 7.0.2：腾讯元宝三轮问答与结果浏览。"""
 
     @SeaOfStarsAW.function_log
     def run_case(self):
-        """
-        测试用例执行
-        """
-        logging.info("用例开始执行")
-        if SeaOfStarsAW.ut_device.locked():
-            SeaOfStarsAW.ut_device.unlock()
-            time.sleep(2)
-
-        for test_time in range(0, self.TEST_TIME):
-            step = 0
-
-            SeaOfStarsAW.start_trace(
-                self.trace_dir_path,
-                self.__class__.__name__,
-                'step_' + str(step),
-                self.screenshot_dir_path,
-            )
-            app_name = "xxxx"
-
-        logging.info('用例执行结束')
+        for iteration in range(self.TEST_TIME):
+            with self.capture_trace(iteration, 1):
+                self.step(1, '启动腾讯元宝')
+                self.start_yuanbao()
+            self.step(2, '输入“什么是AI”')
+            self.ask('什么是AI')
+            self.step(3, '浏览搜索结果，上下滑动3次')
+            self.browse(3, 3)
+            self.step(4, '输入“华为终端的主要产品有哪些”')
+            self.ask('华为终端的主要产品有哪些')
+            self.step(5, '浏览搜索结果，上下滑动3次')
+            self.browse(3, 3)
+            self.step(6, '输入“介绍几款市面上主流的手机”')
+            self.ask('介绍几款市面上主流的手机')
+            self.step(7, '浏览搜索结果，上下滑动3次')
+            self.browse(3, 3)
+            self.step(8, '返回腾讯元宝主界面')
+            self.return_main()
+            with self.capture_trace(iteration, 9):
+                self.step(9, '滑动返回Home页')
+                self.launcher()

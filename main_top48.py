@@ -28,6 +28,10 @@ from cases.PerformanceDynamic_bilibili_0020 import PerformanceDynamic_bilibili_0
 from cases.PerformanceDynamic_bilibili_0030 import PerformanceDynamic_bilibili_0030
 from cases.PerformanceDynamic_bilibili_0040 import PerformanceDynamic_bilibili_0040
 from cases.PerformanceDynamic_bilibili_0050 import PerformanceDynamic_bilibili_0050
+from cases.PerformanceDynamic_call_0010 import PerformanceDynamic_call_0010
+from cases.PerformanceDynamic_call_0020 import PerformanceDynamic_call_0020
+from cases.PerformanceDynamic_camera_0020 import PerformanceDynamic_camera_0020
+from cases.PerformanceDynamic_camera_0030 import PerformanceDynamic_camera_0030
 
 from cases.PerformanceDynamic_douyin_0010 import PerformanceDynamic_douyin_0010
 from cases.PerformanceDynamic_douyin_0030 import PerformanceDynamic_douyin_0030
@@ -174,6 +178,7 @@ fail_num = 0
 Basic1 = [
     PerformanceDynamic_fuzai,
     PerformanceDynamic_fanqie_0010,
+    PerformanceDynamic_camera_0030,
     PerformanceDynamic_weixin_0030,
     PerformanceDynamic_fanqiechangting_0010,
     PerformanceDynamic_weixin_0010,
@@ -197,6 +202,7 @@ Basic1 = [
     PerformanceDynamic_ths_0040,
     PerformanceDynamic_xianyu_0010,
     PerformanceDynamic_weixin_0030,
+    PerformanceDynamic_camera_0020,
     PerformanceDynamic_autonavi_0070,
     PerformanceDynamic_weixin_0010,
     PerformanceDynamic_douyin_0010,
@@ -209,6 +215,7 @@ Basic1 = [
     PerformanceDynamic_momo_0010,
     PerformanceDynamic_autonavi_0080,
     PerformanceDynamic_jrtt_0010,
+    PerformanceDynamic_call_0010,
     PerformanceDynamic_weixin_0030,
     PerformanceDynamic_autonavi_0060,
     PerformanceDynamic_xhs_0030,
@@ -218,6 +225,7 @@ Basic1 = [
     PerformanceDynamic_qq_0010,
     PerformanceDynamic_fanqiechangting_0010,
     PerformanceDynamic_weixin_0040,
+    PerformanceDynamic_call_0020,
     PerformanceDynamic_douyinjisu_0010,
     PerformanceDynamic_wpsoffice_0020,
     PerformanceDynamic_weipinhui_0030,
@@ -261,6 +269,7 @@ Basic1 = [
 Basic2 = [
     PerformanceDynamic_fuzai,
     PerformanceDynamic_momo_0010,
+    PerformanceDynamic_camera_0030,
     PerformanceDynamic_taobao_0020,
     PerformanceDynamic_weixin_0010,
     PerformanceDynamic_mihome_0010,
@@ -502,6 +511,7 @@ Basic4 = [
     PerformanceDynamic_jrtt_0020,
     PerformanceDynamic_cloudmusic_0010,
     PerformanceDynamic_weixin_0060,
+    PerformanceDynamic_camera_0020,
     PerformanceDynamic_xiechengtrip_0010,
     PerformanceDynamic_weixin_0080,
     PerformanceDynamic_taobao_0010,
@@ -512,8 +522,10 @@ Basic4 = [
     PerformanceDynamic_douyin_0030,
     PerformanceDynamic_weixin_0120,
     PerformanceDynamic_yuanbao_0010,
+    PerformanceDynamic_camera_0030,
     PerformanceDynamic_weixin_0160,
     PerformanceDynamic_weixin_0070,
+    PerformanceDynamic_call_0010,
     PerformanceDynamic_taobao_0020,
     PerformanceDynamic_weixin_0030,
     PerformanceDynamic_douyin_0090,
@@ -522,20 +534,25 @@ Basic4 = [
     PerformanceDynamic_weixin_0130,
     PerformanceDynamic_deepseek_0010,
     PerformanceDynamic_weixin_0050,
+    PerformanceDynamic_call_0020,
     PerformanceDynamic_cloudmusic_0010,
     PerformanceDynamic_weixin_0180,
     PerformanceDynamic_weixin_0150,
     PerformanceDynamic_douyin_0020,
+    PerformanceDynamic_call_0010,
     PerformanceDynamic_eggparty_0010,
+    PerformanceDynamic_camera_0030,
     PerformanceDynamic_douyinjisu_0010,
     PerformanceDynamic_weixin_0170,
     PerformanceDynamic_autonavi_0060,
     PerformanceDynamic_pinduoduo_0010,
     PerformanceDynamic_xhs_0030,
     PerformanceDynamic_weixin_0140,
+    PerformanceDynamic_call_0020,
     PerformanceDynamic_baidu_0010,
     PerformanceDynamic_weixin_0190,
     PerformanceDynamic_autonavi_0070,
+    PerformanceDynamic_call_0010,
     PerformanceDynamic_douyin_0010,
     PerformanceDynamic_weixin_0010,
     PerformanceDynamic_taptap_0010,
@@ -545,6 +562,7 @@ Basic4 = [
     PerformanceDynamic_weixin_0060,
     PerformanceDynamic_douyinjisu_0010,
     PerformanceDynamic_jrtt_0010,
+    PerformanceDynamic_call_0020,
     PerformanceDynamic_taobao_0010,
     PerformanceDynamic_autonavi_0080,
     PerformanceDynamic_fanqiechangting_0010,
@@ -580,14 +598,18 @@ Basic5 = [
     PerformanceDynamic_douyinjisu_0010,
     PerformanceDynamic_fanqiechangting_0010,
     PerformanceDynamic_weixin_0150,
+    PerformanceDynamic_call_0010,
     PerformanceDynamic_yuanbao_0010,
     PerformanceDynamic_weixin_0170,
     PerformanceDynamic_fanqie_0010,
+    PerformanceDynamic_camera_0030,
     PerformanceDynamic_weixin_0140,
     PerformanceDynamic_douyin_0010,
     PerformanceDynamic_deepseek_0010,
+    PerformanceDynamic_camera_0030,
     PerformanceDynamic_weixin_0190,
     PerformanceDynamic_deepseek_0010,
+    PerformanceDynamic_call_0020,
     PerformanceDynamic_weixin_0010,
     PerformanceDynamic_pinduoduo_0010,
     PerformanceDynamic_douyinjisu_0010,
@@ -613,6 +635,7 @@ Basic5 = [
     PerformanceDynamic_hongguomianfeiduanju_0020,
     PerformanceDynamic_pinduoduo_0010,
     PerformanceDynamic_weixin_0160,
+    PerformanceDynamic_camera_0030,
     PerformanceDynamic_xhs_0030,
     PerformanceDynamic_weixin_0090,
     PerformanceDynamic_taptap_0010,
@@ -621,6 +644,7 @@ Basic5 = [
     PerformanceDynamic_xhs_0050,
     PerformanceDynamic_hongguomianfeiduanju_0010,
     PerformanceDynamic_weixin_0070,
+    PerformanceDynamic_camera_0030,
     PerformanceDynamic_weixin_0030,
     PerformanceDynamic_yuanbao_0010,
     PerformanceDynamic_weixin_0130,
@@ -634,10 +658,12 @@ Basic5 = [
     PerformanceDynamic_weixin_0150,
     PerformanceDynamic_weixin_0170,
     PerformanceDynamic_doubao_0010,
+    PerformanceDynamic_beiwanglu_0020,
     PerformanceDynamic_weixin_0020,
     PerformanceDynamic_douyin_0010,
     PerformanceDynamic_weibo_0020,
     PerformanceDynamic_weixin_0160,
+    PerformanceDynamic_beiwanglu_0010,
     PerformanceDynamic_weixin_0060,
     PerformanceDynamic_ths_0040,
     PerformanceDynamic_douyinjisu_0010,
@@ -661,10 +687,7 @@ Basic5 = [
 ]
 
 Basic0 = [
-    PerformanceDynamic_autonavi_0050,
-    PerformanceDynamic_autonavi_0060,
-    PerformanceDynamic_autonavi_0070,
-    PerformanceDynamic_autonavi_0080,
+    PerformanceDynamic_happyanimal_0010,PerformanceDynamic_hepingjingying_0030,PerformanceDynamic_wangzherongyao_0030,
 ]
 
 # Basics = [Basic1, Basic2, Basic3, Basic4, Basic5]

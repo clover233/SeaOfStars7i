@@ -1,174 +1,81 @@
-import logging
-import time
-import openpyxl
-from threading import Timer
 from aw import SeaOfStarsAW
-from cases.CaseBase import Case
+from cases.douyin_common import DouyinCase
 
 
-class PerformanceDynamic_douyin_0050(Case):
-    all_app_package_list = ['']
-    TEST_TIME = 1
-
-    def __init__(self, result_path):
-        super().__init__(result_path)
-        SeaOfStarsAW.current_running_class_name = self.__class__.__name__
-
-    @SeaOfStarsAW.function_log
-    def set_up(self):
-        logging.info('测试环境开始准备')
-        phone_app_list = SeaOfStarsAW.get_app_list()
-        for per_app in self.all_app_package_list:
-            if per_app not in phone_app_list:
-                return False
-    #     清空后台
+class PerformanceDynamic_douyin_0050(DouyinCase):
+    """Excel 7.0.2：拍照预览，并与 Test 账号发送文字和媒体消息。"""
 
     @SeaOfStarsAW.function_log
     def run_case(self):
-        """
-        测试用例执行
-        """
-        logging.info("用例开始执行")
-        if SeaOfStarsAW.ut_device.locked():
-            SeaOfStarsAW.ut_device.unlock()
-            time.sleep(2)
-
-        for test_time in range(0, self.TEST_TIME):
-            step = 0
-            # todo 后续放开log
-            # SeaOfStarsAW.start_trace(self.trace_dir_path, self.__class__.__name__, 'step_' + str(step),
-            #                          self.screenshot_dir_path)
-
-            # 1、点击进入抖音，等待3s
-            logging.info('点击进入抖音，等待3s')
-            SeaOfStarsAW.trace_thread.add_log('抖音', '启动抖音，进入聊天界面，发送华为手机')
-            # todo 微博的坐标地址要改下
-            SeaOfStarsAW.ut_device.session().app_activate('com.ss.iphone.ugc.Aweme')
-            time.sleep(5)
-
-            # 2、点击顶部经验，停留1s
-            SeaOfStarsAW.ut_device(labelContains="热点").click()
-            time.sleep(1)
-            SeaOfStarsAW.ut_device(labelContains="经验").click()
-            time.sleep(1)
-            # 3、上滑3次，下滑3次，停留1s
-            for i in range(3):
-                SeaOfStarsAW.ut_device.swipe_up()
-            time.sleep(1)
-            for i in range(3):
-                SeaOfStarsAW.ut_device.swipe_down()
-            time.sleep(1)
-
-            # 4、点击热点，停留1s
-            SeaOfStarsAW.ut_device(labelContains="热点").click()
-            time.sleep(1)
-            # 5、上滑3次，下滑3次，停留1s
-            for i in range(3):
-                SeaOfStarsAW.ut_device.swipe_up()
-            time.sleep(1)
-            for i in range(3):
-                SeaOfStarsAW.ut_device.swipe_down()
-            time.sleep(1)
-
-            # 6、点击查看热榜，停留1s
-            SeaOfStarsAW.ut_device.swipe_down()
-            time.sleep(1)
-            # 7、点击完整热榜，停留1s
-            SeaOfStarsAW.ut_device(labelContains="抖音热榜，完整热榜").click()
-            time.sleep(1)
-            # 8、向左滑动6次，停留1s
-            for i in range(6):
-                SeaOfStarsAW.ut_device.swipe_left()
-            time.sleep(1)
-            # 9、返回热点，停留1s
-            SeaOfStarsAW.ut_device(labelContains="返回按钮").click()
-            time.sleep(2)
-
-            # 10、点击直播，停留1s
-            SeaOfStarsAW.ut_device(labelContains="直播").click()
-            time.sleep(1)
-            # 11、向上滑动6次，停留1s
-            for i in range(6):
-                SeaOfStarsAW.ut_device.swipe_up()
-            time.sleep(1)
-
-            # 12、点击长视频，停留1s
-            SeaOfStarsAW.ut_device(labelContains="精选").click()
-            time.sleep(1)
-
-            # 13、上滑3次，下滑3次，停留1s
-            for i in range(3):
-                SeaOfStarsAW.ut_device.swipe_up()
-            time.sleep(1)
-            for i in range(3):
-                SeaOfStarsAW.ut_device.swipe_down()
-            time.sleep(1)
-
-            # 14、点击+号，停留1s
-            SeaOfStarsAW.ut_device.click(0.5, 0.938)
-            time.sleep(1)
-            # 15、点击相册，停留1s
-            SeaOfStarsAW.ut_device(labelContains="相册").click()
-            time.sleep(1)
-            # 16、上滑三次下滑三次，停留1s
-            for i in range(3):
-                SeaOfStarsAW.ut_device.swipe_down()
-            time.sleep(2)
-            for i in range(3):
-                SeaOfStarsAW.ut_device.swipe_up()
-            time.sleep(2)
-            # 17、返回上一层，停留1s
-            SeaOfStarsAW.ut_device(labelContains="关闭相册").click()
-            time.sleep(1)
-            # 18、点击选择音乐，停留1s
-            SeaOfStarsAW.ut_device(labelContains="选择音乐").click()
-            time.sleep(1)
-
-            # 19、向上滑动6次，停留1s
-            for i in range(6):
-                SeaOfStarsAW.ut_device.swipe_up()
-            time.sleep(2)
-
-            # 20、返回首页，停留1s
-            SeaOfStarsAW.ut_device.swipe(0.496, 0.49, 0.482, 0.916, 0.5)
-            time.sleep(1)
-            SeaOfStarsAW.ut_device(labelContains="关闭").click()
-            time.sleep(1)
-
-            # 21、点击我，停留1s
-            SeaOfStarsAW.ut_device(labelContains="我").click()
-            time.sleep(1)
-
-            # 22、点击收藏，停留1s
-            SeaOfStarsAW.ut_device(labelContains="收藏").click()
-            time.sleep(1)
-
-            # 23、点击第一个收藏的作品，停留1s
-            SeaOfStarsAW.ut_device.click(0.143, 0.667)
-            time.sleep(1)
-
-            # 24、向上滑动三次浏览，停留1s
-            for i in range(3):
-                SeaOfStarsAW.ut_device.swipe_up()
-            time.sleep(1)
-
-            # 25、返回我页面，停留1s
-            SeaOfStarsAW.ut_device.swipe_right()
-            time.sleep(1)
-
-            # 26、点击我的钱包，停留1s
-            SeaOfStarsAW.ut_device.click(0.356, 0.414)
-            time.sleep(1)
-            # 27、返回首页，停留1s
-            SeaOfStarsAW.ut_device.swipe_right()
-            time.sleep(1)
-            SeaOfStarsAW.ut_device(labelContains="首页").click()
-            # 28、退出抖音
-
-            SeaOfStarsAW.ut_device.app_terminate('com.ss.iphone.ugc.Aweme')
-            SeaOfStarsAW.swipe_to_launcher()
-            SeaOfStarsAW.go_home()
-
-
-
-        logging.info('用例执行结束')
+        for iteration in range(self.TEST_TIME):
+            self.prepare_iteration()
+            with self.capture_trace_5s(iteration, 1):
+                self.step(1, '启动抖音')
+                self.start_app(wait=5)
+            self.normalize_home_after_launch()
+            self.step(2, '点击+号')
+            self.open_creation()
+            self.step(3, '点击相册')
+            self.open_creation_album()
+            self.step(4, '返回+号页')
+            self.close_creation_album()
+            self.step(5, '点击照片')
+            self.select_creation_photo_mode()
+            self.step(6, '点击拍照')
+            self.take_creation_photo()
+            self.step(7, '点击选择音乐')
+            self.open_photo_music()
+            self.step(8, '选择音乐向上滑动6次')
+            self.swipe_up_times(6)
+            self.step(9, '返回照片编辑页面')
+            self.close_photo_music()
+            self.step(10, '点击下一步')
+            self.next_from_photo_editor()
+            self.step(11, '点击预览')
+            self.preview_post()
+            self.step(12, '返回抖音首页')
+            self.discard_creation_and_return_home()
+            self.step(13, '点击消息页面')
+            self.open_messages()
+            self.step(14, '进入测试账号(Test)聊天界面，向下滑动3次浏览')
+            self.open_test_chat()
+            self.swipe_down_times(3)
+            self.step(15, '发送文字华为手机')
+            self.send_chat_text('华为手机')
+            self.step(16, '发送一个动态表情包')
+            self.send_dynamic_emoji()
+            self.step(17, '点击+')
+            self.open_chat_more()
+            self.step(18, '点击拍摄')
+            self.enter_chat_camera()
+            self.step(19, '拍摄图片')
+            self.capture_chat_photo()
+            self.step(20, '点击发送')
+            self.send_chat_media()
+            self.step(21, '点击拍摄')
+            self.enter_chat_camera()
+            self.step(22, '拍摄视频')
+            self.capture_chat_video()
+            self.step(23, '点击发送')
+            self.send_chat_media()
+            self.step(24, '点击+')
+            self.open_chat_more()
+            self.step(25, '点击相册')
+            self.enter_chat_album()
+            self.step(26, '相册页面上滑3次，下滑3次')
+            self.browse(3, 3)
+            self.step(27, '点击第一张图片')
+            self.select_first_album_photo()
+            self.step(28, '点击发送')
+            self.send_chat_media()
+            self.step(29, '返回抖音首页')
+            self.return_main()
+            self.step(30, '点击分享，选择测试账号')
+            self.select_test_in_share_panel()
+            self.step(31, '点击发送')
+            self.send_selected_share()
+            self.step(32, '返回抖音主界面')
+            self.return_main()
+            with self.capture_trace_5s(iteration, 33):
+                self.step(33, '滑动返回Home页')
+                self.launcher()

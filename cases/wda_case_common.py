@@ -177,4 +177,10 @@ class WdaCase(Case):
             time.sleep(2)
             if self.device.app_current().get('bundleId') == 'com.apple.springboard':
                 return
+        # 蛋仔派对等横屏全屏游戏会拦截底部手势；仍先执行两次真实滑动，
+        # 失败时再使用 WDA 的 Home-screen 接口完成同一退出结果。
+        self.device.home()
+        time.sleep(2)
+        if self.device.app_current().get('bundleId') == 'com.apple.springboard':
+            return
         self.fail('滑动后未回到 Home 页')

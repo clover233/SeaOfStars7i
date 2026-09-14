@@ -1,47 +1,61 @@
-import logging
 import time
-import openpyxl
-from threading import Timer
+
 from aw import SeaOfStarsAW
-from cases.CaseBase import Case
+from cases.hongguo_common import HongguoCase
 
 
-class PerformanceDynamic_hongguomianfeiduanju_0010(Case):
-    all_app_package_list = ['']
-    TEST_TIME = 1
-
-    def __init__(self, result_path):
-        super().__init__(result_path)
-        SeaOfStarsAW.current_running_class_name = self.__class__.__name__
-
-    @SeaOfStarsAW.function_log
-    def set_up(self):
-        logging.info('测试环境开始准备')
-        phone_app_list = SeaOfStarsAW.get_app_list()
-        for per_app in self.all_app_package_list:
-            if per_app not in phone_app_list:
-                return False
-        # 清空后台
+class PerformanceDynamic_hongguomianfeiduanju_0010(HongguoCase):
+    """Excel 7.0.2：浏览剧场榜单与观看历史。"""
 
     @SeaOfStarsAW.function_log
     def run_case(self):
-        """
-        测试用例执行
-        """
-        logging.info("用例开始执行")
-        if SeaOfStarsAW.ut_device.locked():
-            SeaOfStarsAW.ut_device.unlock()
-            time.sleep(2)
-
-        for test_time in range(0, self.TEST_TIME):
-            step = 0
-
-            SeaOfStarsAW.start_trace(
-                self.trace_dir_path,
-                self.__class__.__name__,
-                'step_' + str(step),
-                self.screenshot_dir_path,
-            )
-            app_name = "xxxx"
-
-        logging.info('用例执行结束')
+        for iteration in range(self.TEST_TIME):
+            self.prepare_iteration()
+            with self.capture_trace(iteration, 1):
+                self.step(1, '启动红果免费短剧')
+                self.start_hongguo()
+            self.step(2, '向上抛滑5次，浏览首页')
+            self.swipe_vertical(5, 0)
+            self.step(3, '向下抛滑5次，浏览首页')
+            self.swipe_vertical(0, 5)
+            self.step(4, '点击剧场按钮，进入剧场页面')
+            self.open_theatre()
+            self.step(5, '向上滑动5次，浏览找剧页面')
+            self.swipe_vertical(5, 0)
+            self.step(6, '向下滑动5次，浏览找剧页面')
+            self.swipe_vertical(0, 5)
+            self.step(7, '点击排行榜，进入红果推荐榜')
+            self.open_ranking()
+            self.step(8, '向上滑动5次，浏览红果推荐榜')
+            self.swipe_vertical(5, 0)
+            self.step(9, '向下滑动5次，浏览红果推荐榜')
+            self.swipe_vertical(0, 5)
+            self.step(10, '点击推荐榜第一的短剧，观看视频15s')
+            self.open_first_ranking_card()
+            time.sleep(15)
+            self.step(11, '返回红果推荐榜')
+            self.return_from_video()
+            self.step(12, '点击热播榜')
+            self.tap('热播榜', max_y=300, wait=3)
+            self.step(13, '向上滑动5次，浏览热播榜')
+            self.swipe_vertical(5, 0)
+            self.step(14, '向下滑动5次，浏览热播榜')
+            self.swipe_vertical(0, 5)
+            self.step(15, '点击热播榜第一的短剧，观看视频15s')
+            self.open_first_ranking_card()
+            time.sleep(15)
+            self.step(16, '返回剧场界面')
+            self._edge_back()
+            self.return_to_theatre()
+            self.step(17, '点击我的，进入我的界面')
+            self.open_my()
+            self.step(18, '上滑一次，浏览观看历史')
+            self.swipe_vertical(1, 0)
+            self.step(19, '下滑一次，浏览观看历史')
+            self.swipe_vertical(0, 1)
+            self.step(20, '点击首页')
+            self.tap('首页', min_y=760, wait=3)
+            with self.capture_trace(iteration, 21):
+                self.step(21, '滑动返回Home页')
+                self.launcher()
+                time.sleep(5)
