@@ -1,4 +1,5 @@
 import os
+import signal
 import threading
 import time
 import logging
@@ -29,6 +30,7 @@ def xctrace_environment():
 class iTraceThread(threading.Thread):
 
     TRACE_TIME_LIMIT_SECONDS = 5
+    TRACE_SAVE_GRACE_SECONDS = 60
 
     def __init__(self):
         threading.Thread.__init__(self)
@@ -68,8 +70,8 @@ class iTraceThread(threading.Thread):
     def stop_trace(self):
         if self.process:
             self.isLetTraceRun = False
-            # 由 xctrace 的 5s time-limit 统一结束采集，不再因用例步骤
-            # 长短发送 SIGINT，避免生成时长不一的 trace。
+            # 录制线程按 5s time-limit（并带 SIGINT 兜底）统一结束采集，
+            # stop_trace 只等待采集结束，不按用例步骤长短提前截断。
             if not self.recording_finished.is_set():
                 logging.info("等待 5s Trace 自动结束...")
             self.recording_finished.wait()
@@ -88,6 +90,8 @@ class iTraceThread(threading.Thread):
                 logging.info("trace线程开始抓取trace")
                 end_time = None
                 start_time_stamp = None
+                stop_timer = None
+                finish_timer = None
                 self.start_time = None
                 time_stamp = time.strftime("%Y%m%d_%H%M%S", time.localtime())
                 temptrace_path = os.path.join(self.save_dir, "temp_{}.trace".format(time_stamp))
@@ -116,12 +120,40 @@ class iTraceThread(threading.Thread):
                     line = raw_line.strip().decode("utf8", errors="replace")
                     if line != '':
                         output_lines.append(line)
-                        if "Ctrl-C" in line:
+                        if "Ctrl-C" in line and self.start_time is None:
                             # trace真正开始的时间
                             self.start_time = time.time()
                             start_time_stamp = time.strftime("%Y%m%d_%H%M%S", time.localtime())
 
                             self.realStartTrace = True
+                            # Xcode 26 beta 在部分真机/模板组合下会忽略
+                            # --time-limit，显式发送一次 Ctrl-C 作为 5s 兜底。
+                            process = self.process
+                            def finish_stalled_save():
+                                if process and process.poll() is None:
+                                    logging.warning(
+                                        'Trace停止后超过%ss仍未保存完成，终止xctrace以完成落盘',
+                                        self.TRACE_SAVE_GRACE_SECONDS)
+                                    try:
+                                        process.terminate()
+                                    except OSError:
+                                        logging.exception('Trace保存进程终止失败')
+
+                            def stop_at_limit():
+                                nonlocal finish_timer
+                                if process and process.poll() is None:
+                                    logging.info('Trace达到5s，发送停止信号')
+                                    try:
+                                        process.send_signal(signal.SIGINT)
+                                        finish_timer = threading.Timer(
+                                            self.TRACE_SAVE_GRACE_SECONDS,
+                                            finish_stalled_save)
+                                        finish_timer.start()
+                                    except OSError:
+                                        logging.exception('Trace停止信号发送失败')
+                            stop_timer = threading.Timer(
+                                self.TRACE_TIME_LIMIT_SECONDS, stop_at_limit)
+                            stop_timer.start()
                         if ("Stopping recording" in line
                                 or "Reached specified time limit" in line):
                             # trace真正结束的时间
@@ -129,6 +161,10 @@ class iTraceThread(threading.Thread):
                             self.recording_finished.set()
                         logging.info(line)
                 return_code = self.process.wait()
+                if stop_timer is not None:
+                    stop_timer.cancel()
+                if finish_timer is not None:
+                    finish_timer.cancel()
                 self.process = None
                 self.realStartTrace = False
                 # time-limit 到期时 stop_trace 可能尚未被调用，不能因为
