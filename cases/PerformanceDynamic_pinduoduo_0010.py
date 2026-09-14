@@ -1,91 +1,91 @@
-import logging
 import time
-import openpyxl
-from threading import Timer
+
 from aw import SeaOfStarsAW
-from cases.CaseBase import Case
+from cases.wda_case_common import WdaCase
 
 
-class PerformanceDynamic_pinduoduo_0010(Case):
-    all_app_package_list = ['']
-    TEST_TIME = 1
+class PerformanceDynamic_pinduoduo_0010(WdaCase):
+    """Excel 7.0.2：搜索华为手机，浏览商品和店铺。"""
 
-    def __init__(self, result_path):
-        super().__init__(result_path)
-        SeaOfStarsAW.current_running_class_name = self.__class__.__name__
+    PACKAGE = 'com.xunmeng.pinduoduo'
+    APP_NAME = '拼多多'
 
-    @SeaOfStarsAW.function_log
-    def set_up(self):
-        logging.info('测试环境开始准备')
-        phone_app_list = SeaOfStarsAW.get_app_list()
-        for per_app in self.all_app_package_list:
-            if per_app not in phone_app_list:
-                return False
-    #     清空后台
+    def check_account_blocker(self):
+        nodes = self.nodes()
+        if (self.find('实名认证提示', nodes=nodes) is not None
+                or self.find('提交实名信息', nodes=nodes) is not None):
+            self.fail('账号被实名认证提示拦截；请先完成实名或更换不受限账号')
+
+    def first_product(self):
+        # 回到搜索结果顶部，保证选择的是第一件商品。
+        self.device.click(0.5, 0.02)
+        time.sleep(2)
+        candidates = []
+        for node in self.nodes():
+            if node.tag != 'XCUIElementTypeImage' or node.get('visible') != 'true':
+                continue
+            y = float(node.get('y', 0))
+            width = float(node.get('width', 0))
+            height = float(node.get('height', 0))
+            if 160 <= y <= 700 and width >= 100 and height >= 100:
+                candidates.append(node)
+        if not candidates:
+            self.fail('搜索结果页没有可点击的商品')
+        return sorted(candidates, key=lambda item: (
+            float(item.get('y', 0)), float(item.get('x', 0))))[0]
+
+    def return_to_pdd_home(self):
+        for _ in range(5):
+            nodes = self.nodes()
+            if self.find('已选中首页', nodes=nodes) is not None:
+                return
+            back = self.find('返回', 'Back', nodes=nodes)
+            if back is not None:
+                self.tap_node(back)
+            else:
+                self.device.swipe(0.01, 0.5, 0.9, 0.5, 0.3)
+            time.sleep(3)
+        self.fail('未能返回拼多多主界面')
 
     @SeaOfStarsAW.function_log
     def run_case(self):
-        """
-        测试用例执行
-        """
-        logging.info("用例开始执行")
-        if SeaOfStarsAW.ut_device.locked():
-            SeaOfStarsAW.ut_device.unlock()
-            time.sleep(2)
-
-        for test_time in range(0, self.TEST_TIME):
-            # step = 0
-            # SeaOfStarsAW.start_trace(self.trace_dir_path, self.__class__.__name__, 'step_' + str(step),
-            #                          self.screenshot_dir_path)
-
-            logging.info('启动拼多多')
-            # SeaOfStarsAW.trace_thread.add_log('拼多多', '拼多多')
-            SeaOfStarsAW.ut_device.click(0.613, 0.692)
-            time.sleep(2)
-            # SeaOfStarsAW.trace_thread.add_log('拼多多', '拼多多首页浏览')
-            logging.info('上滑3次')
-            for _ in range(3):
-                SeaOfStarsAW.ut_device.swipe_up()
-                time.sleep(2)
-            logging.info('下滑3次')
-            for _ in range(3):
-                SeaOfStarsAW.ut_device.swipe_down()
-                time.sleep(2)
-            logging.info('点击搜索栏')
-            # SeaOfStarsAW.trace_thread.add_log('拼多多', '搜索页面浏览')
-            SeaOfStarsAW.ut_device.click(0.53, 0.075)
-            time.sleep(3)
-            logging.info('输入华为手机')
-            SeaOfStarsAW.ut_device.send_keys('华为手机')
-            time.sleep(2)
-            logging.info('点击搜索')
-            SeaOfStarsAW.ut_device(label='搜索').click()
-            time.sleep(2)
-            logging.info('上滑3次')
-            for _ in range(3):
-                SeaOfStarsAW.ut_device.swipe_up()
-                time.sleep(2)
-            logging.info('下滑3次')
-            for _ in range(3):
-                SeaOfStarsAW.ut_device.swipe_down()
-                time.sleep(2)
-            # SeaOfStarsAW.trace_thread.add_log('拼多多', '商品详情浏览')
-            logging.info('点击第一个商品')
-            SeaOfStarsAW.ut_device.click(0.17, 0.645)
-            time.sleep(2)
-            logging.info('上滑2次')
-            for _ in range(2):
-                SeaOfStarsAW.ut_device.swipe_up()
-                time.sleep(2)
-            logging.info('下滑2次')
-            for _ in range(2):
-                SeaOfStarsAW.ut_device.swipe_down()
-                time.sleep(2)
-            logging.info('返回首页')
-            SeaOfStarsAW.ut_device(label='返回').click()
+        for iteration in range(self.TEST_TIME):
+            self.device.app_terminate(self.PACKAGE)
             time.sleep(1)
-            # SeaOfStarsAW.trace_thread.add_log('拼多多', '上滑退出')
-            SeaOfStarsAW.ut_device.home()
-            time.sleep(2)
+            with self.capture_trace(iteration, 1):
+                self.step(1, '启动拼多多')
+                self.start_app(wait=5)
 
-        logging.info('用例执行结束')
+            self.step(2, '拼多多首页上滑3次，下滑3次')
+            self.browse(3, 3)
+
+            self.step(3, '点击上方搜索框')
+            self.tap('搜索', fallback=(0.5, 0.085), wait=2)
+
+            self.step(4, '输入华为手机，点击搜索')
+            self.enter_text('华为手机', clear=True)
+            self.tap('搜索', wait=6, choose='last')
+
+            self.step(5, '搜索结果页上滑3次，下滑3次')
+            self.browse(3, 3)
+
+            self.step(6, '点击第一个商品')
+            self.tap_node(self.first_product())
+            time.sleep(7)
+            self.check_account_blocker()
+
+            self.step(7, '商品详情页上滑2次，下滑2次')
+            self.browse(2, 2)
+
+            self.step(8, '点击左下角店铺')
+            self.tap('店铺', '进店逛逛', fallback=(0.08, 0.94), wait=6)
+
+            self.step(9, '店铺页上滑2次，下滑2次')
+            self.browse(2, 2)
+
+            self.step(10, '返回拼多多主界面')
+            self.return_to_pdd_home()
+
+            with self.capture_trace(iteration, 11):
+                self.step(11, '滑动返回Home页')
+                self.launcher()

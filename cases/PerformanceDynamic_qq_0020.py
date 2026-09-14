@@ -1,71 +1,39 @@
-import logging
 import time
-import openpyxl
-from threading import Timer
+
 from aw import SeaOfStarsAW
-from cases.CaseBase import Case
+from cases.qq_common import QqCase
 
 
-class PerformanceDynamic_qq_0020(Case):
-    all_app_package_list = ['']
-    TEST_TIME = 1
-
-    def __init__(self, result_path):
-        super().__init__(result_path)
-        SeaOfStarsAW.current_running_class_name = self.__class__.__name__
-
-    @SeaOfStarsAW.function_log
-    def set_up(self):
-        logging.info('测试环境开始准备')
-        phone_app_list = SeaOfStarsAW.get_app_list()
-        for per_app in self.all_app_package_list:
-            if per_app not in phone_app_list:
-                return False
-    #     清空后台
+class PerformanceDynamic_qq_0020(QqCase):
+    """Excel 7.0.2：浏览群图片并发送文字、表情和图片。"""
 
     @SeaOfStarsAW.function_log
     def run_case(self):
-        """
-        测试用例执行
-        """
-        logging.info("用例开始执行")
-        if SeaOfStarsAW.ut_device.locked():
-            SeaOfStarsAW.ut_device.unlock()
-            time.sleep(2)
-
-        for test_time in range(0, self.TEST_TIME):
-            # step = 0
-            # SeaOfStarsAW.start_trace(self.trace_dir_path, self.__class__.__name__, 'step_' + str(step),
-            #                          self.screenshot_dir_path)
-
-            logging.info('启动qq')
-            # SeaOfStarsAW.trace_thread.add_log('爱奇艺', '启动爱奇艺')
-            SeaOfStarsAW.ut_device.click(0.62, 0.238)
-            time.sleep(5)
-            logging.info('点击好友消息列表')
-            SeaOfStarsAW.ut_device.click(0.476, 0.211)
-            time.sleep(2)
-            logging.info('上滑1次')
-            SeaOfStarsAW.ut_device.swipe_up()
-            time.sleep(2)
-            logging.info('下滑1次')
-            SeaOfStarsAW.ut_device.swipe_down()
-            time.sleep(2)
-            logging.info('点击图片')
-            SeaOfStarsAW.ut_device.click(0.476, 0.211)
-            time.sleep(3)
-            logging.info('浏览图片左滑1次')
-            SeaOfStarsAW.ut_device.swipe_left()
-            time.sleep(2)
-            logging.info('返回')
-            SeaOfStarsAW.ut_device(label='返回').click()
-            time.sleep(2)
-            logging.info('返回首页')
-            SeaOfStarsAW.ut_device.click(0.123, 0.921)
-            time.sleep(2)
-            # SeaOfStarsAW.trace_thread.add_log('爱奇艺', '上滑退出')
-            logging.info('上滑退出')
-            SeaOfStarsAW.ut_device.home()
-            time.sleep(2)
-
-        logging.info('用例执行结束')
+        for iteration in range(self.TEST_TIME):
+            self.prepare_iteration()
+            with self.capture_trace(iteration, 1):
+                self.step(1, '启动QQ')
+                self.start_qq()
+            self.step(2, '点击【测试图片群】，查看群聊消息')
+            self.open_chat_from_message_list('测试图片群', '图片测试群')
+            self.step(3, '好友群浏览消息，上滑2次，下滑2次')
+            self.browse(2, 2)
+            self.step(4, '点击群聊中的图片，查看大图，右滑4次，左滑4次')
+            self.open_picture_message()
+            self.swipe_images(4, 4)
+            self.step(5, '侧滑返回消息列表界面')
+            self.return_to_message_list()
+            self.step(6, '点击多媒体消息的聊天群')
+            self.open_chat_from_message_list('多媒体消息')
+            self.step(7, '发送文字你好，动态')
+            self.send_text_message('你好，动态')
+            self.step(8, '发送表情')
+            self.send_classic_emoji()
+            self.step(9, '发送图片')
+            self.send_first_photo()
+            self.step(10, '侧滑返回消息页')
+            self.return_to_message_list()
+            with self.capture_trace(iteration, 11):
+                self.step(11, '滑动返回Home页')
+                self.launcher()
+                time.sleep(5)
