@@ -29,6 +29,13 @@ class PhoneCase(WdaCase):
             time.sleep(0.5)
 
     def open_tab(self, name):
+        # 电话会保留上次打开的联系人详情；先退回根页，
+        # 否则底部标签看得见但点击不会切页。
+        nodes = self.nodes()
+        back = self.find('BackButton', nodes=nodes)
+        if back is not None:
+            self.tap_node(back)
+            time.sleep(1)
         self.tap(name, min_y=740, wait=2)
 
     def open_contact_search(self):
@@ -57,10 +64,10 @@ class PhoneCase(WdaCase):
 
         nodes = self.nodes()
         if self.find('无结果', nodes=nodes) is not None:
-            logging.warning('设备中没有联系人 %s，跳过打开联系人详情', text)
             self.contact_detail_open = False
-            return False
+            self.fail('设备中没有联系人 {}'.format(text))
         matches = []
+        search_result_cells = []
         fallback_cells = []
         for node in nodes:
             name = self.node_name(node)
@@ -69,23 +76,41 @@ class PhoneCase(WdaCase):
                     and node.tag == 'XCUIElementTypeCell'
                     and 100 < y < 740):
                 fallback_cells.append(node)
+                if name.startswith('contact_search_cell_'):
+                    search_result_cells.append(node)
             if (node.get('visible') == 'true'
                     and node.tag in ('XCUIElementTypeCell', 'XCUIElementTypeButton')
                     and text.lower() in name.lower()
                     and y < 740):
                 matches.append(node)
+        # iOS 26 为保护联系人隐私，搜索列表仅暴露
+        # contact_search_cell_N，不暴露姓名；按结果序号选第一条。
+        if not matches and search_result_cells:
+            matches = search_result_cells
         if not matches and fallback_cells:
             matches = fallback_cells
         if not matches:
-            logging.warning('搜索结果中没有联系人 %s，跳过打开联系人详情', text)
             self.contact_detail_open = False
-            return False
+            self.fail('搜索结果中没有联系人 {}'.format(text))
         matches.sort(key=lambda node: (
             float(node.get('y', 0)), float(node.get('x', 0))))
         self.tap_node(matches[0])
-        time.sleep(3)
-        self.contact_detail_open = True
-        return True
+        deadline = time.monotonic() + 8
+        while True:
+            detail_nodes = self.nodes()
+            header = self.find('ContactCardHeaderView', nodes=detail_nodes)
+            back = self.find('BackButton', nodes=detail_nodes)
+            header_text = ' '.join(
+                header.get(key) or '' for key in ('name', 'label', 'value')
+            ) if header is not None else ''
+            if (header is not None and back is not None
+                    and text.lower() in header_text.lower()):
+                self.contact_detail_open = True
+                return True
+            if time.monotonic() >= deadline:
+                self.contact_detail_open = False
+                self.fail('未进入联系人 {} 的详情页'.format(text))
+            time.sleep(0.5)
 
     def return_to_contacts(self):
         if self.contact_detail_open:

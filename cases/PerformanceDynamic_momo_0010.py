@@ -1,47 +1,34 @@
-import logging
-import time
-import openpyxl
-from threading import Timer
 from aw import SeaOfStarsAW
-from cases.CaseBase import Case
+from cases.momo_common import MomoCase
 
 
-class PerformanceDynamic_momo_0010(Case):
-    all_app_package_list = ['']
-    TEST_TIME = 1
-
-    def __init__(self, result_path):
-        super().__init__(result_path)
-        SeaOfStarsAW.current_running_class_name = self.__class__.__name__
-
-    @SeaOfStarsAW.function_log
-    def set_up(self):
-        logging.info('测试环境开始准备')
-        phone_app_list = SeaOfStarsAW.get_app_list()
-        for per_app in self.all_app_package_list:
-            if per_app not in phone_app_list:
-                return False
-        # 清空后台
+class PerformanceDynamic_momo_0010(MomoCase):
+    """Excel 7.0.2：浏览陌陌首页、直播及各底部页面。"""
 
     @SeaOfStarsAW.function_log
     def run_case(self):
-        """
-        测试用例执行
-        """
-        logging.info("用例开始执行")
-        if SeaOfStarsAW.ut_device.locked():
-            SeaOfStarsAW.ut_device.unlock()
-            time.sleep(2)
-
-        for test_time in range(0, self.TEST_TIME):
-            step = 0
-
-            SeaOfStarsAW.start_trace(
-                self.trace_dir_path,
-                self.__class__.__name__,
-                'step_' + str(step),
-                self.screenshot_dir_path,
-            )
-            app_name = "xxxx"
-
-        logging.info('用例执行结束')
+        for iteration in range(self.TEST_TIME):
+            with self.capture_trace(iteration, 1):
+                self.step(1, '启动陌陌')
+                self.start_momo()
+            self.step(2, '首页浏览，上滑5次，下滑5次')
+            self.browse(5, 5)
+            self.step(3, '点击直播，切换到直播页')
+            self.open_tab('直播')
+            self.step(4, '直播页浏览，上滑5次，下滑5次')
+            self.browse(5, 5)
+            self.step(5, '点击第一个直播观看，等待15秒')
+            self.open_first_live()
+            self.step(6, '返回直播列表页面')
+            self.return_live_list()
+            self.step(7, '点击消息tab，切换到消息页')
+            self.open_tab('消息')
+            self.step(8, '点击小宇宙tab，切换到小宇宙页')
+            self.open_tab('小宇宙')
+            self.step(9, '点击更多tab，切换到更多页')
+            self.open_tab('更多')
+            self.step(10, '点击首页，返回陌陌首页')
+            self.open_tab('首页')
+            with self.capture_trace(iteration, 11):
+                self.step(11, '上滑返回Home页')
+                self.launcher()

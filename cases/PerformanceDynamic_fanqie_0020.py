@@ -1,122 +1,42 @@
-import logging
 import time
-import openpyxl
-from threading import Timer
+
 from aw import SeaOfStarsAW
-from cases.CaseBase import Case
+from cases.fanqie_common import FanqieCase
 
 
-class PerformanceDynamic_fanqie_0020(Case):
-    all_app_package_list = ['']
-    TEST_TIME = 1
-
-    def __init__(self, result_path):
-        super().__init__(result_path)
-        SeaOfStarsAW.current_running_class_name = self.__class__.__name__
-
-    @SeaOfStarsAW.function_log
-    def set_up(self):
-        logging.info('测试环境开始准备')
-        phone_app_list = SeaOfStarsAW.get_app_list()
-        for per_app in self.all_app_package_list:
-            if per_app not in phone_app_list:
-                return False
-    #     清空后台
+class PerformanceDynamic_fanqie_0020(FanqieCase):
+    """Excel 7.0.2：浏览听书与完整榜单。"""
 
     @SeaOfStarsAW.function_log
     def run_case(self):
-        """
-        测试用例执行
-        """
-        logging.info("用例开始执行")
-        if SeaOfStarsAW.ut_device.locked():
-            SeaOfStarsAW.ut_device.unlock()
-            time.sleep(2)
-
-        for test_time in range(0, self.TEST_TIME):
-            step = 0
-            # todo 后续放开log
-            # SeaOfStarsAW.start_trace(self.trace_dir_path, self.__class__.__name__, 'step_' + str(step),
-            #                          self.screenshot_dir_path)
-
-            # 1、启动番茄免费小说，启动3s
-            logging.info('启动番茄免费小说，启动3s')
-            SeaOfStarsAW.trace_thread.add_log('番茄小说', '启动番茄小说，浏览主页')
-            SeaOfStarsAW.ut_device.session().app_activate('com.dragon.read')
-            time.sleep(3)
-            # 2、主页浏览，上滑3次，下滑3次，每次停留2s
-            for i in range(3):
-                SeaOfStarsAW.ut_device.swipe_up()
-            time.sleep(2)
-            for i in range(3):
-                SeaOfStarsAW.ut_device.swipe_down()
-            time.sleep(2)
-
-            # 3、点击听书，停留1s
-            SeaOfStarsAW.trace_thread.add_log('番茄小说', '听书浏览')
-            SeaOfStarsAW.ut_device(labelContains="书城").click()
-            time.sleep(1)
-            SeaOfStarsAW.ut_device(labelContains="听书").click()
-            time.sleep(1)
-
-            # 4、滑动浏览，上滑5次，下滑5次，每次停留2s
-            for i in range(5):
-                SeaOfStarsAW.ut_device.swipe_up()
-            time.sleep(2)
-            for i in range(5):
-                SeaOfStarsAW.ut_device.swipe_down()
-            time.sleep(2)
-            # 5、点击推荐，返回到首页
-            SeaOfStarsAW.ut_device(labelContains="推荐").click()
-            time.sleep(1)
-
-            # 6、点击完本榜
-            SeaOfStarsAW.trace_thread.add_log('番茄小说', '完本榜浏览')
-            SeaOfStarsAW.ut_device(labelContains="完本榜").click()
-            time.sleep(1)
-            # 7、左滑两次，右滑动两次，每次停留2s
-            for i in range(2):
-                SeaOfStarsAW.ut_device.swipe(0.759, 0.424, 0.374, 0.424, 0.5)
-            time.sleep(2)
-            for i in range(2):
-                SeaOfStarsAW.ut_device.swipe(0.374, 0.424, 0.759, 0.424, 0.5)
-            time.sleep(2)
-
-            # 8、点击口碑榜，停留1s
-            SeaOfStarsAW.trace_thread.add_log('番茄小说', '口碑榜浏览')
-            SeaOfStarsAW.ut_device.click(0.408, 0.207)
-            time.sleep(1)
-            # 9、左滑两次，右滑动两次，每次停留2s
-            for i in range(2):
-                SeaOfStarsAW.ut_device.swipe(0.759, 0.424, 0.374, 0.424, 0.5)
-            time.sleep(2)
-            for i in range(2):
-                SeaOfStarsAW.ut_device.swipe(0.374, 0.424, 0.759, 0.424, 0.5)
-            time.sleep(2)
-
-            # 10、点击高分榜，停留1s
-            SeaOfStarsAW.trace_thread.add_log('番茄小说', '高风榜浏览')
-            SeaOfStarsAW.ut_device.click(0.565, 0.206)
-            time.sleep(1)
-            # 11、左滑两次，右滑动两次，每次停留2s
-            for i in range(2):
-                SeaOfStarsAW.ut_device.swipe(0.759, 0.424, 0.374, 0.424, 0.5)
-            time.sleep(2)
-            for i in range(2):
-                SeaOfStarsAW.ut_device.swipe(0.374, 0.424, 0.759, 0.424, 0.5)
-            time.sleep(2)
-
-            # 12、返回推荐榜，停留1s
-            SeaOfStarsAW.ut_device(labelContains="完本榜").click()
-            time.sleep(1)
-            SeaOfStarsAW.ut_device(labelContains="推荐榜").click()
-            time.sleep(2)
-
-            # 13、返回home界面，停留1s
-            SeaOfStarsAW.ut_device.app_terminate('com.dragon.read')
-            SeaOfStarsAW.swipe_to_launcher()
-            SeaOfStarsAW.go_home()
-
-
-
-        logging.info('用例执行结束')
+        for iteration in range(self.TEST_TIME):
+            self.prepare_iteration()
+            with self.capture_trace(iteration, 1):
+                self.step(1, '启动番茄免费小说')
+                self.start_fanqie()
+            self.step(2, '主页浏览，上滑3次，下滑3次')
+            self.browse(3, 3)
+            self.step(3, '点击听书，进入听书页面')
+            self.open_listen_page()
+            self.step(4, '听书页浏览，上滑5次，下滑5次')
+            self.browse(5, 5)
+            self.step(5, '点击推荐进入首页')
+            self.tap('推荐', max_y=150, wait=3)
+            self.step(6, '点击完本榜，进入完本榜页面')
+            self.open_full_ranking()
+            self.step(7, '左滑2次，右滑2次，浏览完本榜单')
+            self.browse_ranking()
+            self.step(8, '点击口碑榜，进入口碑榜页面')
+            self.switch_ranking('口碑榜', '书友榜')
+            self.step(9, '左滑2次，右滑2次，浏览口碑榜单')
+            self.browse_ranking()
+            self.step(10, '点击高分榜，进入高分榜页面')
+            self.switch_ranking('高分榜', '书荒榜')
+            self.step(11, '左滑2次，右滑2次，浏览高分榜单')
+            self.browse_ranking()
+            self.step(12, '返回番茄免费小说主界面')
+            self.return_main()
+            with self.capture_trace(iteration, 13):
+                self.step(13, '滑动返回Home页')
+                self.launcher()
+                time.sleep(5)

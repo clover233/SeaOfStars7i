@@ -1,6 +1,53 @@
 # SeaOfStars
 
+## 环境安装与启动
 
+### 1. 安装 Python 依赖
+
+在终端执行：
+
+```bash
+python3 -m pip install pandas facebook-wda tidevice3 weditor
+```
+
+- `pandas`：处理测试数据。
+- `facebook-wda`：通过 Python 调用 WebDriverAgent（WDA）。
+- `tidevice3`：提供 `t3` 命令，用于建立设备隧道和启动 WDA。
+- `weditor`：查看设备界面和控件信息。
+
+### 2. 连接 iPhone
+
+通过 USB 连接 iPhone，解锁设备并信任电脑。确保设备已开启开发者模式，并已安装、信任签名后的 WebDriverAgent。
+
+### 3. 启动设备隧道
+
+打开一个终端，执行以下命令，并保持运行：
+
+```bash
+sudo t3 tunneld
+```
+
+根据提示输入 Mac 登录密码。
+
+### 4. 启动 WebDriverAgent
+
+另开一个终端，执行以下命令，并保持运行：
+
+```bash
+t3 -u 00008150-001125802E28401C runwda
+```
+
+其中 `00008150-001125802E28401C` 是当前 iPhone 的 UDID；更换设备时需替换为对应的 UDID。
+
+### 5. 启动 weditor
+
+WDA 启动成功后，再打开一个终端执行：
+
+```bash
+weditor
+```
+
+在打开的浏览器页面中选择 iOS，连接对应设备的 WDA 服务，即可查看界面和控件信息。
 
 ## iPhone17 第 2–6 页 App 包名
 
@@ -40,8 +87,8 @@
 | 电话 | `com.apple.mobilephone` |
 | 相机 | `com.apple.camera` |
 | 云闪付 | `com.unionpay.chsp` |
-| 大众点评 | `com.dianping.dpscope` |
 | 网易云音乐 | `com.netease.cloudmusic` |
+| 大众点评 | `com.dianping.dpscope` |
 | DeepSeek | `com.deepseek.chat` |
 | 抖音极速版 | `com.ss.iphone.ugc.aweme.lite` |
 | 蛋仔派对 | `com.netease.party` |
