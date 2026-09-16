@@ -21,12 +21,43 @@ class TaobaoCase(WdaCase):
             finally:
                 time.sleep(max(0, 5 - (time.monotonic() - started_at)))
 
+    def _enable_continuous_ui_mode(self):
+        """视频流和商品页持续动画时不等待 XCTest 进入 idle。"""
+        self._previous_idle_settings = None
+        try:
+            current = self.device.appium_settings()
+            self._previous_idle_settings = {
+                'waitForIdleTimeout': current.get('waitForIdleTimeout', 10),
+                'animationCoolOffTimeout': current.get(
+                    'animationCoolOffTimeout', 2),
+            }
+            self.device.appium_settings(
+                {'waitForIdleTimeout': 0, 'animationCoolOffTimeout': 0})
+        except Exception:
+            logging.exception('设置 WDA 连续页面模式失败')
+
+    def _restore_idle_settings(self):
+        previous = getattr(self, '_previous_idle_settings', None)
+        if previous is not None:
+            try:
+                self.device.appium_settings(previous)
+            except Exception:
+                logging.exception('恢复 WDA idle 设置失败')
+        self._previous_idle_settings = None
+
     def prepare_iteration(self):
+        self._enable_continuous_ui_mode()
         try:
             self.device.app_terminate(self.PACKAGE)
         except Exception:
             logging.exception('结束淘宝进程失败，继续尝试启动')
         time.sleep(1)
+
+    def launcher(self):
+        try:
+            super().launcher()
+        finally:
+            self._restore_idle_settings()
 
     def wait_for(self, *names, timeout=10, contains=False, min_y=None,
                  max_y=None):

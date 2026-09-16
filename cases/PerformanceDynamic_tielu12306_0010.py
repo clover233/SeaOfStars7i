@@ -1,88 +1,36 @@
-import logging
-import time
-import openpyxl
-from threading import Timer
 from aw import SeaOfStarsAW
-from cases.CaseBase import Case
+from cases.tielu12306_common import Tielu12306Case
 
 
-class PerformanceDynamic_tielu12306_0010(Case):
-    all_app_package_list = ['']
-    TEST_TIME = 1
-
-    def __init__(self, result_path):
-        super().__init__(result_path)
-        SeaOfStarsAW.current_running_class_name = self.__class__.__name__
-
-    @SeaOfStarsAW.function_log
-    def set_up(self):
-        logging.info('测试环境开始准备')
-        phone_app_list = SeaOfStarsAW.get_app_list()
-        for per_app in self.all_app_package_list:
-            if per_app not in phone_app_list:
-                return False
-    #     清空后台
+class PerformanceDynamic_tielu12306_0010(Tielu12306Case):
+    """Excel 7.0.2：铁路12306车票结果和排序浏览。"""
 
     @SeaOfStarsAW.function_log
     def run_case(self):
-        """
-        测试用例执行
-        """
-        logging.info("用例开始执行")
-        if SeaOfStarsAW.ut_device.locked():
-            SeaOfStarsAW.ut_device.unlock()
-            time.sleep(2)
-
-        for test_time in range(0, self.TEST_TIME):
-            # step = 0
-            # SeaOfStarsAW.start_trace(self.trace_dir_path, self.__class__.__name__, 'step_' + str(step),
-            #                          self.screenshot_dir_path)
-
-            logging.info('启动铁路12306')
-            # SeaOfStarsAW.trace_thread.add_log('铁路12306', '启动12306')
-            SeaOfStarsAW.ut_device.click(0.843, 0.697)
-            logging.info('等待5s')
-            time.sleep(5)
-            # SeaOfStarsAW.trace_thread.add_log('铁路12306', '首页抛滑，上滑1次，下滑2次')
-            logging.info('上滑1次')   # 抛滑暂用swipe代替
-            for _ in range(1):
-                SeaOfStarsAW.ut_device.swipe_up()
-                time.sleep(1)
-            logging.info('下滑2次')
-            for _ in range(1):
-                SeaOfStarsAW.ut_device.swipe_down()
-                time.sleep(2)
-            logging.info('点击查询车票')
-            SeaOfStarsAW.ut_device(label='查询车票').click()
-            time.sleep(2)
-            # SeaOfStarsAW.trace_thread.add_log('铁路12306', '火车票浏览，上滑2次，下滑3次')
-            logging.info('上滑2次')
-            for _ in range(2):
-                SeaOfStarsAW.ut_device.swipe_up()
-                time.sleep(2)
-            logging.info('下滑3次')
-            for _ in range(3):
-                SeaOfStarsAW.ut_device.swipe_down()
-                time.sleep(2)
-            # SeaOfStarsAW.trace_thread.add_log('铁路12306', '火车票浏览tab切换')
-            logging.info('点击耗时最短')
-            # SeaOfStarsAW.ut_device(label='耗时最短').click()
-            SeaOfStarsAW.ut_device.click(0.303, 0.947)
-            time.sleep(1)
-            logging.info('点击最早发车')
-            # SeaOfStarsAW.ut_device(label='最早发车').click()
-            SeaOfStarsAW.ut_device.click(0.5, 0.947)
-            time.sleep(1)
-            logging.info('点击价格最低')
-            # SeaOfStarsAW.ut_device(label='价格最低').click()
-            SeaOfStarsAW.ut_device.click(0.693, 0.949)
-            time.sleep(1)
-            logging.info('返回首页')
-            SeaOfStarsAW.ut_device(label='返回').click()
-            time.sleep(1)
-            logging.info('返回桌面')
-            # SeaOfStarsAW.trace_thread.add_log('12306', '上滑退出')
-            SeaOfStarsAW.ut_device.home()
-            time.sleep(2)
-
-        logging.info('用例执行结束')
+        for iteration in range(self.TEST_TIME):
+            self.prepare_iteration()
+            with self.capture_trace_5s(iteration, 1):
+                self.step(1, '启动铁路12306')
+                self.start_tielu12306()
+            self.step(2, '向上抛滑1次，浏览首页')
+            self.browse(1, 0)
+            self.step(3, '向下抛滑2次，浏览首页')
+            self.browse(0, 2)
+            self.step(4, '点击首页的查询车票')
+            self.open_ticket_results()
+            self.step(5, '向上抛滑2次，浏览信息')
+            self.browse(2, 0)
+            self.step(6, '向下抛滑3次，浏览信息')
+            self.browse(0, 3)
+            self.step(7, '点击耗时最短')
+            self.select_result_sort('耗时最短')
+            self.step(8, '点击发时最早')
+            self.select_result_sort('出发最早', '出发从早到晚排序',
+                                    '发时最早', '最早发车')
+            self.step(9, '点击价格最低')
+            self.select_result_sort('价格最低')
+            self.step(10, '返回铁路12306主界面')
+            self.return_home()
+            with self.capture_trace_5s(iteration, 11):
+                self.step(11, '滑动返回Home页')
+                self.launcher()
