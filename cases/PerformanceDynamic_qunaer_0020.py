@@ -1,68 +1,56 @@
-import logging
-import time
-import openpyxl
-from threading import Timer
 from aw import SeaOfStarsAW
-from cases.CaseBase import Case
+from cases.qunaer_common import QunarCase
 
 
-class PerformanceDynamic_qunaer_0020(Case):
-    all_app_package_list = ['']
-    TEST_TIME = 1
-
-    def __init__(self, result_path):
-        super().__init__(result_path)
-        SeaOfStarsAW.current_running_class_name = self.__class__.__name__
-
-    @SeaOfStarsAW.function_log
-    def set_up(self):
-        logging.info('测试环境开始准备')
-        phone_app_list = SeaOfStarsAW.get_app_list()
-        for per_app in self.all_app_package_list:
-            if per_app not in phone_app_list:
-                return False
-    #     清空后台
+class PerformanceDynamic_qunaer_0020(QunarCase):
+    """机票预订页、值机选座页和火车车次浏览。"""
 
     @SeaOfStarsAW.function_log
     def run_case(self):
-        """
-        测试用例执行
-        """
-        logging.info("用例开始执行")
-        if SeaOfStarsAW.ut_device.locked():
-            SeaOfStarsAW.ut_device.unlock()
-            time.sleep(2)
+        for iteration in range(self.TEST_TIME):
+            self.prepare_iteration()
+            with self.capture_trace_5s(iteration, 1):
+                self.step(1, '启动去哪儿旅行')
+                self.start_qunar()
 
-        for test_time in range(0, self.TEST_TIME):
-            # step = 0
-            # SeaOfStarsAW.start_trace(self.trace_dir_path, self.__class__.__name__, 'step_' + str(step),
-            #                          self.screenshot_dir_path)
+            self.step(2, '点击机票，切换到机票页')
+            self.open_flight()
 
-            logging.info('启动去哪旅行')
-            # SeaOfStarsAW.trace_thread.add_log('去哪旅行', '去哪旅行')
-            SeaOfStarsAW.ut_device.click(0.156, 0.703)
-            time.sleep(2)
-            logging.info('点击机票')   # 无法刷新机票
-            SeaOfStarsAW.ut_device.click(0.12, 0.314)
-            time.sleep(2)
-            logging.info('点击搜索')
-            SeaOfStarsAW.ut_device.click(0.506, 0.579)
-            time.sleep(2)
+            self.step(3, '点击搜索，查看搜索结果')
+            self.search_flight()
 
-            logging.info('点击火车高铁')
-            SeaOfStarsAW.ut_device.click(0.44, 0.311)
-            time.sleep(2)
-            logging.info('点击搜索')
-            SeaOfStarsAW.ut_device.click(0.51, 0.508)
-            time.sleep(2)
-            logging.info('返回首页')
-            SeaOfStarsAW.ut_device.click(0.056, 0.073)
-            time.sleep(2)
-            logging.info('返回首页')
-            SeaOfStarsAW.ut_device.click(0.05, 0.075)
-            time.sleep(2)
-            # SeaOfStarsAW.trace_thread.add_log('去哪儿旅行', '上滑退出')
-            SeaOfStarsAW.ut_device.home()
-            time.sleep(2)
+            self.step(4, '点击搜索结果第一条查看详情')
+            self.open_first_flight()
 
-        logging.info('用例执行结束')
+            self.step(5, '点击预订，切换到订票页面')
+            self.open_first_booking()
+
+            self.step(6, '滑动浏览订票页面，上滑2次、下滑2次')
+            self.browse(2, 2)
+
+            self.step(7, '侧滑3次返回机票页')
+            self.edge_back(count=3)
+
+            self.step(8, '点击值机选座，切换到选座页')
+            self.open_checkin_seat()
+
+            self.step(9, '值机选座页上滑1次、下滑1次')
+            self.browse(1, 1)
+
+            self.step(10, '侧滑返回去哪儿旅行主页')
+            self.edge_back()
+            self.back_tap(count=2)
+
+            self.step(11, '点击火车高铁，进入搜索页面')
+            self.open_train()
+            self.set_train_arrival_from_hot_city()
+
+            self.step(12, '点击搜索，进入车次选择页面')
+            self.search_train()
+
+            self.step(13, '返回去哪儿旅行主界面')
+            self.back_tap(count=3)
+
+            with self.capture_trace_5s(iteration, 14):
+                self.step(14, '滑动返回 Home 页')
+                self.launcher()

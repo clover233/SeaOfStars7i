@@ -1,47 +1,37 @@
-import logging
-import time
-import openpyxl
-from threading import Timer
 from aw import SeaOfStarsAW
-from cases.CaseBase import Case
+from cases.sodamusic_common import SodaMusicCase
 
 
-class PerformanceDynamic_sodamusic_0010(Case):
-    all_app_package_list = ['']
-    TEST_TIME = 1
-
-    def __init__(self, result_path):
-        super().__init__(result_path)
-        SeaOfStarsAW.current_running_class_name = self.__class__.__name__
-
-    @SeaOfStarsAW.function_log
-    def set_up(self):
-        logging.info('测试环境开始准备')
-        phone_app_list = SeaOfStarsAW.get_app_list()
-        for per_app in self.all_app_package_list:
-            if per_app not in phone_app_list:
-                return False
-        # 清空后台
+class PerformanceDynamic_sodamusic_0010(SodaMusicCase):
+    """Excel 7.0.2：汽水音乐搜索、播放和歌单浏览。"""
 
     @SeaOfStarsAW.function_log
     def run_case(self):
-        """
-        测试用例执行
-        """
-        logging.info("用例开始执行")
-        if SeaOfStarsAW.ut_device.locked():
-            SeaOfStarsAW.ut_device.unlock()
-            time.sleep(2)
-
-        for test_time in range(0, self.TEST_TIME):
-            step = 0
-
-            SeaOfStarsAW.start_trace(
-                self.trace_dir_path,
-                self.__class__.__name__,
-                'step_' + str(step),
-                self.screenshot_dir_path,
-            )
-            app_name = "xxxx"
-
-        logging.info('用例执行结束')
+        for iteration in range(self.TEST_TIME):
+            self.prepare_iteration()
+            with self.capture_trace_5s(iteration, 1):
+                self.step(1, '启动汽水音乐')
+                self.start_sodamusic()
+            self.step(2, '点击右上角搜索')
+            self.open_search()
+            self.step(3, '搜索国歌')
+            self.search('国歌')
+            self.step(4, '上滑2次，下滑2次浏览国歌')
+            self.browse(2, 2)
+            self.step(5, '返回首页')
+            self.return_home()
+            self.step(6, '点击下方播放按钮，播放15S后暂停')
+            self.play_for_15_seconds_and_pause()
+            self.step(7, '点击右下角我的')
+            self.open_mine()
+            self.step(8, '点击我喜欢的音乐')
+            self.open_liked_music()
+            self.step(9, '返回首页')
+            self.return_home()
+            self.step(10, '点击右下角省略号打开播放列表')
+            self.open_playlist()
+            self.step(11, '返回汽水音乐主界面')
+            self.close_playlist()
+            with self.capture_trace_5s(iteration, 12):
+                self.step(12, '滑动返回Home页')
+                self.launcher()

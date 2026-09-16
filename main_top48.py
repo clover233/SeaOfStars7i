@@ -687,7 +687,7 @@ Basic5 = [
 ]
 
 Basic0 = [
-    PerformanceDynamic_happyanimal_0010,PerformanceDynamic_hepingjingying_0030,PerformanceDynamic_wangzherongyao_0030,
+    PerformanceDynamic_qq_0020,
 ]
 
 # Basics = [Basic1, Basic2, Basic3, Basic4, Basic5]
