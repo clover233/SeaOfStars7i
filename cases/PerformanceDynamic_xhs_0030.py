@@ -1,122 +1,46 @@
-import logging
-import time
-import openpyxl
-from threading import Timer
 from aw import SeaOfStarsAW
-from cases.CaseBase import Case
+from cases.xhs_common import XhsCase
 
 
-class PerformanceDynamic_xhs_0030(Case):
-    all_app_package_list = ['']
-    TEST_TIME = 1
-
-    def __init__(self, result_path):
-        super().__init__(result_path)
-        SeaOfStarsAW.current_running_class_name = self.__class__.__name__
-
-    @SeaOfStarsAW.function_log
-    def set_up(self):
-        logging.info('测试环境开始准备')
-        phone_app_list = SeaOfStarsAW.get_app_list()
-        for per_app in self.all_app_package_list:
-            if per_app not in phone_app_list:
-                return False
-    #     清空后台
+class PerformanceDynamic_xhs_0030(XhsCase):
+    """小红书“穿搭图片”和热搜浏览。"""
 
     @SeaOfStarsAW.function_log
     def run_case(self):
-        """
-        测试用例执行
-        """
-        logging.info("用例开始执行")
-        if SeaOfStarsAW.ut_device.locked():
-            SeaOfStarsAW.ut_device.unlock()
-            time.sleep(2)
+        for iteration in range(self.TEST_TIME):
+            self.prepare_iteration()
+            with self.capture_trace_5s(iteration, 1):
+                self.step(1, '启动小红书')
+                self.start_xhs()
 
-        for test_time in range(0, self.TEST_TIME):
-            step = 0
-            # todo 后续放开log
-            # SeaOfStarsAW.start_trace(self.trace_dir_path, self.__class__.__name__, 'step_' + str(step),
-            #                          self.screenshot_dir_path)
+            self.step(2, '点击右上角搜索')
+            self.open_search()
+            self.step(3, '搜索“穿搭图片”并返回搜索页，重复3次')
+            self.repeat_search_and_return('穿搭图片', 3)
+            self.step(4, '再次搜索“穿搭图片”')
+            self.search_keyword('穿搭图片')
+            self.step(5, '点击左上角第一条搜索结果')
+            self.open_first_search_result()
+            self.step(6, '笔记详情上滑1次、下滑1次')
+            self.browse(1, 1)
+            self.step(7, '点击图片看大图，左滑3次、右滑3次')
+            self.open_note_image_viewer()
+            self.horizontal_browse(3, 3)
+            self.step(8, '返回搜索结果页面')
+            self.edge_back()
+            self.step(9, '搜索结果上滑3次、下滑3次，重复2次')
+            for _ in range(2):
+                self.browse(3, 3)
+            self.step(10, '返回搜索页面')
+            self.edge_back(wait=4)
+            self.step(11, '点击搜索发现区域的第一条热搜')
+            self.open_first_hot_search()
+            self.step(12, '热搜页面上滑3次、下滑3次，重复2次')
+            for _ in range(2):
+                self.browse(3, 3)
+            self.step(13, '返回小红书主界面')
+            self.return_home()
 
-            step1 = "'打开小红书,等待10s'"
-            logging.info('启动小红书')
-            SeaOfStarsAW.trace_thread.add_log('小红书', step1)
-            SeaOfStarsAW.ut_device.swipe_left()
-            SeaOfStarsAW.ut_device.click(0.149, 0.714)
-            time.sleep(10)
-
-            step2 = "点击右上角 搜索"
-            SeaOfStarsAW.trace_thread.add_log('小红书', step2)
-            SeaOfStarsAW.ut_device.click(0.935, 0.085)
-            time.sleep(1)
-
-            step3 = "搜索 穿搭图片（停留1s）返回上一级 停留1s 重复3次"
-            for i in range(3):
-                SeaOfStarsAW.ut_device().set_text("穿搭图片")
-                time.sleep(1)
-                SeaOfStarsAW.ut_device.click(0.613, 0.474)
-                time.sleep(1)
-
-            step4 = "搜索 穿搭图片（停留1s）"
-            SeaOfStarsAW.trace_thread.add_log('小红书', step4)
-            SeaOfStarsAW.ut_device().set_text("穿搭图片")
-            SeaOfStarsAW.ut_device(labelContains="搜索").click()
-            time.sleep(1)
-
-            step5 = "点击左上角第一条消息 停留1s"
-            SeaOfStarsAW.trace_thread.add_log('小红书', step5)
-            SeaOfStarsAW.ut_device.click(0.247,0.347)
-            time.sleep(1)
-
-            step6 = "上滑一次  下滑一次 每次停留2s"
-            SeaOfStarsAW.trace_thread.add_log('小红书', step6)
-            SeaOfStarsAW.ut_device.swipe_up()
-            time.sleep(2)
-            SeaOfStarsAW.ut_device.swipe_down()
-            time.sleep(2)
-
-            step7 = "返回上一层 停留1s"
-            SeaOfStarsAW.trace_thread.add_log('小红书', step7)
-            SeaOfStarsAW.ut_device(labelContains="返回").click()
-            time.sleep(1)
-
-            step8 = "上滑3次 下滑3次 重复2次 每次停留2s"
-            SeaOfStarsAW.trace_thread.add_log('小红书', step8)
-            for i in range(2):
-                for i in range(3):
-                    SeaOfStarsAW.ut_device.swipe_up()
-                for i in range(3):
-                    SeaOfStarsAW.ut_device.swipe_down()
-                time.sleep(2)
-
-            step9 = "返回上一层"
-            SeaOfStarsAW.trace_thread.add_log('小红书', step9)
-            SeaOfStarsAW.ut_device(labelContains="返回").click()
-
-            step10 = "点击搜索 下的 第一条热搜"
-            SeaOfStarsAW.trace_thread.add_log('小红书', step10)
-            SeaOfStarsAW.ut_device.click(0.463, 0.444)
-            time.sleep(3)
-
-            step11 = "上滑3次 下滑3次 重复2次 每次停留2s"
-            SeaOfStarsAW.trace_thread.add_log('小红书', step11)
-            for i in range(2):
-                for i in range(3):
-                    SeaOfStarsAW.ut_device.swipe_up()
-                for i in range(3):
-                    SeaOfStarsAW.ut_device.swipe_down()
-                time.sleep(2)
-
-            step12 = "返回首页"
-            SeaOfStarsAW.trace_thread.add_log('小红书', step12)
-            SeaOfStarsAW.swipe_return()
-            SeaOfStarsAW.swipe_return()
-
-            step13 = "返回home页面"
-            SeaOfStarsAW.trace_thread.add_log('小红书', step13)
-            SeaOfStarsAW.ut_device.home()
-            SeaOfStarsAW.ut_device.swipe_right()
-            time.sleep(1)
-
-        logging.info('用例执行结束')
+            with self.capture_trace_5s(iteration, 14):
+                self.step(14, '滑动返回Home页')
+                self.launcher()

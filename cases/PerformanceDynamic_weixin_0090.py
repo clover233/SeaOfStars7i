@@ -1,103 +1,40 @@
-import logging
-import time
-import openpyxl
-from threading import Timer
 from aw import SeaOfStarsAW
-from cases.CaseBase import Case
+from cases.weixin_common import WeixinCase
 
 
-class PerformanceDynamic_weixin_0090(Case):
-    all_app_package_list = ['']
-    TEST_TIME = 1
-
-    def __init__(self, result_path):
-        super().__init__(result_path)
-        SeaOfStarsAW.current_running_class_name = self.__class__.__name__
-
-    @SeaOfStarsAW.function_log
-    def set_up(self):
-        logging.info('测试环境开始准备')
-        phone_app_list = SeaOfStarsAW.get_app_list()
-        for per_app in self.all_app_package_list:
-            if per_app not in phone_app_list:
-                return False
-    #     清空后台
+class PerformanceDynamic_weixin_0090(WeixinCase):
+    """Excel 7.0.2：搜索、扫一扫与二维码收款页。"""
 
     @SeaOfStarsAW.function_log
     def run_case(self):
-        """
-        测试用例执行
-        """
-        logging.info("用例开始执行")
-        if SeaOfStarsAW.ut_device.locked():
-            SeaOfStarsAW.ut_device.unlock()
-            time.sleep(2)
-
-        for test_time in range(0, self.TEST_TIME):
-            # step = 0
-            # SeaOfStarsAW.start_trace(self.trace_dir_path, self.__class__.__name__, 'step_' + str(step),
-            #                          self.screenshot_dir_path)
-
-
-            logging.info('启动微信')
-            SeaOfStarsAW.trace_thread.add_log('微信', '启动微信')
-            SeaOfStarsAW.ut_device.click(0.606, 0.585)
-            logging.info('等待5s')
-            time.sleep(5)
-            SeaOfStarsAW.trace_thread.add_log('微信', '搜索华为手机')
-            logging.info('点击搜索框')
-            SeaOfStarsAW.ut_device.click(0.473, 0.125)
-            time.sleep(2)
-            SeaOfStarsAW.ut_device.send_keys('华为手机')
-            time.sleep(2)
-            SeaOfStarsAW.ut_device(label='搜索').click()
-            time.sleep(2)
-            logging.info('返回')
-            SeaOfStarsAW.ut_device.click(0.93, 0.079)
-            time.sleep(2)
-            SeaOfStarsAW.trace_thread.add_log('微信', '扫一扫')
-            logging.info('点击右上角+号')
-            SeaOfStarsAW.ut_device.click(0.933, 0.075)
-            time.sleep(2)
-            logging.info('点击扫一扫')
-            SeaOfStarsAW.ut_device(label='扫一扫').click()
-            time.sleep(2)
-            logging.info('点击相册')
-            SeaOfStarsAW.ut_device.click(0.883, 0.817)
-            time.sleep(2)
-            SeaOfStarsAW.trace_thread.add_log('微信', '扫一扫相册浏览')
-            logging.info('上滑3次，下滑3次')
-            for _ in range(3):
-                SeaOfStarsAW.ut_device.swipe_up()
-                time.sleep(2)
-            for _ in range(3):
-                SeaOfStarsAW.ut_device.swipe_down()
-                time.sleep(2)
-            logging.info('侧滑返回')
-            SeaOfStarsAW.ut_device(label='关闭').click()
-            time.sleep(2)
-            logging.info('侧滑返回首页')
-            SeaOfStarsAW.ut_device(label='关闭').click()
-            time.sleep(2)
-            SeaOfStarsAW.trace_thread.add_log('微信', '收付款')
-            logging.info('点击右上角+号')
-            SeaOfStarsAW.ut_device.click(0.933, 0.075)
-            time.sleep(2)
-            logging.info('点击收付款')
-            SeaOfStarsAW.ut_device(label='收付款').click()
-            time.sleep(2)
-            logging.info('点击二维码收款')
-            SeaOfStarsAW.ut_device(label='二维码收款').click()
-            time.sleep(2)
-            logging.info('侧滑返回')
-            SeaOfStarsAW.ut_device(label='返回').click()
-            time.sleep(2)
-            logging.info('侧滑返回首页')
-            SeaOfStarsAW.trace_thread.add_log('微信', '返回桌面')
-            SeaOfStarsAW.ut_device(label='返回').click()
-            time.sleep(2)
-            logging.info('返回桌面')
-            SeaOfStarsAW.ut_device.home()
-            time.sleep(2)
-
-        logging.info('用例执行结束')
+        for iteration in range(self.TEST_TIME):
+            self.prepare_iteration()
+            with self.capture_trace_5s(iteration, 1):
+                self.step(1, '启动微信')
+                self.start_weixin()
+            self.finish_weixin_start()
+            self.step(2, '点击搜索')
+            self.tap('搜索', max_y=180, wait=2)
+            self.step(3, '搜索华为手机')
+            self.enter_text('华为手机', clear=True)
+            self.tap('Search', '搜索', min_y=700, wait=4)
+            self.step(4, '返回微信主界面')
+            self.return_weixin_home()
+            self.step(5, '点击右上角快捷操作')
+            self.tap('快捷操作', max_y=120, wait=2)
+            self.step(6, '点击扫一扫，进入扫码页')
+            self.tap('扫一扫', wait=4)
+            self.dismiss_mini_program_permissions()
+            self.step(7, '返回微信主界面')
+            self.return_weixin_home()
+            self.step(8, '点击右上角快捷操作')
+            self.tap('快捷操作', max_y=120, wait=2)
+            self.step(9, '点击收付款')
+            self.tap('收付款', wait=4)
+            self.step(10, '点击二维码收款')
+            self.tap('二维码收款', wait=4)
+            self.step(11, '返回微信主界面')
+            self.return_weixin_home()
+            with self.capture_trace_5s(iteration, 12):
+                self.step(12, '滑动返回Home页')
+                self.launcher()

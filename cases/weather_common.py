@@ -126,81 +126,50 @@ class WeatherCase(WdaCase):
         if self.find('搜索城市或机场', min_y=760) is None:
             self.fail('点击城市列表按钮后未进入位置列表')
 
-    def enter_manage_cities(self):
+    def open_and_dismiss_city_menu(self):
+        """打开城市列表的更多菜单，再按用例要求点空白处收起。"""
         self.tap('更多', max_y=150, wait=2)
-        # 当前系统只暴露菜单图标名；pencil 对应可见文字“编辑列表”。
-        self.tap('pencil', max_y=150, wait=4)
-        if self.find('checkmark', max_y=150) is None:
-            self.fail('点击“编辑列表”后未进入城市管理状态')
+        if self.find('pencil', max_y=150) is None:
+            self.fail('点击“更多”后未显示城市管理菜单')
+        # 点菜单外的左侧空白区，只收起菜单，不进入不能打开城市的编辑态。
+        self.device.click(24, 210)
+        time.sleep(3)
+        nodes = self.nodes()
+        if self.find('pencil', max_y=150, nodes=nodes) is not None:
+            self.fail('单击空白处后城市管理菜单未收起')
+        if not self._city_cards(nodes):
+            self.fail('收起菜单后未返回城市列表')
 
     def open_first_managed_city(self):
-        # iOS 26 编辑状态下城市卡片不可打开，先完成编辑再选第一项。
-        done = self.find('checkmark', max_y=150)
-        if done is not None:
-            self.tap_node(done)
-            time.sleep(4)
         cards = self._city_cards()
         if len(cards) < 2:
             self.fail('位置列表少于2座城市，请预先添加至少2座城市')
+        self._city_count = len(cards)
         self.tap_node(cards[0])
         time.sleep(6)
         if not self.is_city_weather():
             self.fail('点击城市管理界面的第一个城市后未进入天气主页')
 
     def switch_cities(self, left=5, right=5, repeats=5):
-        """按 Excel 原文执行5轮，每轮左5次、右5次。"""
+        """每轮左5次、右5次；不在动画过程中反复拉取 source。"""
         for _ in range(repeats):
             for _ in range(left):
-                self.device.swipe(0.84, 0.42, 0.16, 0.42, 0.25)
-                time.sleep(0.6)
+                # 起止点都避开左右边缘，否则右滑会被 iOS 当成返回手势。
+                self.device.swipe(0.75, 0.52, 0.25, 0.52, 0.35)
+                time.sleep(0.8)
             for _ in range(right):
-                self.device.swipe(0.16, 0.42, 0.84, 0.42, 0.25)
-                time.sleep(0.6)
-        time.sleep(2)
+                self.device.swipe(0.25, 0.52, 0.75, 0.52, 0.35)
+                time.sleep(0.8)
+            # 城市数少于单向滑动次数时，最后一次右滑会回到位置列表。
+            # 继续下一轮前重新打开第一座城市，避免后续在列表上误滑。
+            time.sleep(1)
+            nodes = self.nodes()
+            if not self.is_city_weather(nodes):
+                cards = self._city_cards(nodes)
+                if not cards:
+                    self.fail('切换城市时离开了天气页，且无法回到城市列表')
+                self.tap_node(cards[0])
+                time.sleep(4)
+        time.sleep(4)
         if not self.is_city_weather():
             self.fail('左右切换城市后离开了天气主页')
-
-    def open_more_weather(self):
-        """用当前版本的10日预报详情替代已移除的“查看更多天气”。"""
-        for _ in range(8):
-            nodes = self.nodes()
-            daily_rows = []
-            for node in nodes:
-                name = self.node_name(node)
-                y = float(node.get('y', 0))
-                width = float(node.get('width', 0))
-                if (node.get('visible') == 'true'
-                        and node.tag == 'XCUIElementTypeButton'
-                        and 100 <= y < 780
-                        and width >= 350
-                        and '°' in name
-                        and '最高' not in name
-                        and '最低' not in name):
-                    daily_rows.append(node)
-            if daily_rows:
-                daily_rows.sort(key=lambda node: float(node.get('y', 0)))
-                self.tap_node(daily_rows[0])
-                time.sleep(6)
-                break
-            self.device.swipe(0.5, 0.76, 0.5, 0.32, 0.3)
-            time.sleep(1)
-        else:
-            self.fail('未找到10日天气预报入口')
-        nodes = self.nodes()
-        if (self.find('天气状况', max_y=180, nodes=nodes) is None or
-                self.find('xmark', max_y=180, nodes=nodes) is None):
-            self.fail('点击近日天气后未进入天气状况详情')
-
-    def browse_recent_weather(self):
-        self.device.swipe(0.84, 0.4, 0.16, 0.4, 0.3)
-        time.sleep(2)
-        self.device.swipe(0.16, 0.4, 0.84, 0.4, 0.3)
-        time.sleep(2)
-        if self.find('天气状况', max_y=180) is None:
-            self.fail('左右查看近日天气时离开了天气状况详情')
-
-    def close_weather_detail(self):
-        self.tap('xmark', max_y=180, wait=5)
-        if not self.is_city_weather():
-            self.fail('关闭天气状况详情后未返回天气主界面')
-

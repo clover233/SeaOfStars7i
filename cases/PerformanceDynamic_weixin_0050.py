@@ -1,47 +1,46 @@
-import logging
-import time
-import openpyxl
-from threading import Timer
 from aw import SeaOfStarsAW
-from cases.CaseBase import Case
+from cases.weixin_common import WeixinCase
 
 
-class PerformanceDynamic_weixin_0050(Case):
-    all_app_package_list = ['']
-    TEST_TIME = 1
-
-    def __init__(self, result_path):
-        super().__init__(result_path)
-        SeaOfStarsAW.current_running_class_name = self.__class__.__name__
-
-    @SeaOfStarsAW.function_log
-    def set_up(self):
-        logging.info('测试环境开始准备')
-        phone_app_list = SeaOfStarsAW.get_app_list()
-        for per_app in self.all_app_package_list:
-            if per_app not in phone_app_list:
-                return False
-        # 清空后台
+class PerformanceDynamic_weixin_0050(WeixinCase):
+    """Excel 7.0.2：科技公众号资料、文章及官网入口浏览。"""
 
     @SeaOfStarsAW.function_log
     def run_case(self):
-        """
-        测试用例执行
-        """
-        logging.info("用例开始执行")
-        if SeaOfStarsAW.ut_device.locked():
-            SeaOfStarsAW.ut_device.unlock()
-            time.sleep(2)
-
-        for test_time in range(0, self.TEST_TIME):
-            step = 0
-
-            SeaOfStarsAW.start_trace(
-                self.trace_dir_path,
-                self.__class__.__name__,
-                'step_' + str(step),
-                self.screenshot_dir_path,
-            )
-            app_name = "xxxx"
-
-        logging.info('用例执行结束')
+        for iteration in range(self.TEST_TIME):
+            self.prepare_iteration()
+            with self.capture_trace_5s(iteration, 1):
+                self.step(1, '启动微信')
+                self.start_weixin()
+            self.finish_weixin_start()
+            self.step(2, '点击通讯录')
+            self.open_contacts()
+            self.step(3, '点击公众号')
+            self.tap('公众号', min_y=300, max_y=500, wait=3)
+            self.step(4, '点击{}名片，进入资料页'.format(self.TECH_ACCOUNT))
+            self.open_official_account(self.TECH_ACCOUNT)
+            self.step(5, '浏览公众号/服务号资料页')
+            self.browse(2, 2)
+            self.step(6, '点击第一篇文章')
+            self.open_first_official_article()
+            self.step(7, '浏览文章页面')
+            self.browse(3, 3)
+            self.step(8, '返回{}资料页'.format(self.TECH_ACCOUNT))
+            self.return_official_profile(self.TECH_ACCOUNT)
+            self.return_contacts()
+            self.tap('公众号', min_y=300, max_y=500, wait=3)
+            self.step(9, '点击{}公众号名片'.format(self.HARMONY_ACCOUNT))
+            self.open_official_account(self.HARMONY_ACCOUNT)
+            self.open_official_chat()
+            self.step(10, '点击屏幕底部HMOS后点击官网直达')
+            self.tap('HMOS', min_y=760, wait=1)
+            self.tap('官网直达', min_y=600, wait=5)
+            self.step(11, '上滑2次，下滑2次浏览官网文章')
+            self.browse(2, 2)
+            self.step(12, '返回公众号界面')
+            self.return_official_profile(self.HARMONY_ACCOUNT)
+            self.step(13, '返回微信主界面')
+            self.return_weixin_home()
+            with self.capture_trace_5s(iteration, 14):
+                self.step(14, '滑动返回Home页')
+                self.launcher()

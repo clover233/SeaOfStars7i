@@ -1,47 +1,38 @@
-import logging
-import time
-import openpyxl
-from threading import Timer
 from aw import SeaOfStarsAW
-from cases.CaseBase import Case
+from cases.weixin_common import WeixinCase
 
 
-class PerformanceDynamic_weixin_0190(Case):
-    all_app_package_list = ['']
-    TEST_TIME = 1
-
-    def __init__(self, result_path):
-        super().__init__(result_path)
-        SeaOfStarsAW.current_running_class_name = self.__class__.__name__
-
-    @SeaOfStarsAW.function_log
-    def set_up(self):
-        logging.info('测试环境开始准备')
-        phone_app_list = SeaOfStarsAW.get_app_list()
-        for per_app in self.all_app_package_list:
-            if per_app not in phone_app_list:
-                return False
-        # 清空后台
+class PerformanceDynamic_weixin_0190(WeixinCase):
+    """Excel 7.0.2：微信选择多张照片并打开大图。"""
 
     @SeaOfStarsAW.function_log
     def run_case(self):
-        """
-        测试用例执行
-        """
-        logging.info("用例开始执行")
-        if SeaOfStarsAW.ut_device.locked():
-            SeaOfStarsAW.ut_device.unlock()
-            time.sleep(2)
-
-        for test_time in range(0, self.TEST_TIME):
-            step = 0
-
-            SeaOfStarsAW.start_trace(
-                self.trace_dir_path,
-                self.__class__.__name__,
-                'step_' + str(step),
-                self.screenshot_dir_path,
-            )
-            app_name = "xxxx"
-
-        logging.info('用例执行结束')
+        for iteration in range(self.TEST_TIME):
+            self.prepare_iteration()
+            with self.capture_trace_5s(iteration, 1):
+                self.step(1, '启动微信')
+                self.start_weixin()
+            self.finish_weixin_start()
+            self.step(2, '点击测试账号，进入好友聊天页面')
+            self.open_chat(self.TEST_ACCOUNT)
+            self.step(3, '点击加号按钮，进入更多功能页面')
+            self.open_chat_actions()
+            self.step(4, '点击照片，进入照片页面')
+            self.open_photo_picker()
+            self.step(5, '浏览照片页面，上滑3次，下滑3次')
+            self.browse(3, 3)
+            self.step(6, '点击选择多张图片')
+            self.select_photos(3)
+            self.step(7, '点击发送，进入好友聊天页面')
+            self.tap('发送(3)', '发送', contains=True, min_y=760, wait=5)
+            self.step(8, '点击加号按钮，进入更多功能页面')
+            self.open_chat_actions()
+            self.step(9, '点击照片，进入照片页面')
+            self.open_photo_picker()
+            self.step(10, '点击第一张图片大图，进入大图界面')
+            self.open_first_photo_preview()
+            self.step(11, '返回微信主界面')
+            self.return_weixin_home()
+            with self.capture_trace_5s(iteration, 12):
+                self.step(12, '滑动返回Home页')
+                self.launcher()

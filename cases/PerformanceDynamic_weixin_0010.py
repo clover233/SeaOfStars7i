@@ -1,47 +1,47 @@
-import logging
-import time
-import openpyxl
-from threading import Timer
 from aw import SeaOfStarsAW
-from cases.CaseBase import Case
+from cases.weixin_common import WeixinCase
 
 
-class PerformanceDynamic_weixin_0010(Case):
-    all_app_package_list = ['']
-    TEST_TIME = 1
-
-    def __init__(self, result_path):
-        super().__init__(result_path)
-        SeaOfStarsAW.current_running_class_name = self.__class__.__name__
-
-    @SeaOfStarsAW.function_log
-    def set_up(self):
-        logging.info('测试环境开始准备')
-        phone_app_list = SeaOfStarsAW.get_app_list()
-        for per_app in self.all_app_package_list:
-            if per_app not in phone_app_list:
-                return False
-        # 清空后台
+class PerformanceDynamic_weixin_0010(WeixinCase):
+    """Excel 7.0.2：微信聊天图片、视频转发及语音播放。"""
 
     @SeaOfStarsAW.function_log
     def run_case(self):
-        """
-        测试用例执行
-        """
-        logging.info("用例开始执行")
-        if SeaOfStarsAW.ut_device.locked():
-            SeaOfStarsAW.ut_device.unlock()
-            time.sleep(2)
-
-        for test_time in range(0, self.TEST_TIME):
-            step = 0
-
-            SeaOfStarsAW.start_trace(
-                self.trace_dir_path,
-                self.__class__.__name__,
-                'step_' + str(step),
-                self.screenshot_dir_path,
-            )
-            app_name = "xxxx"
-
-        logging.info('用例执行结束')
+        for iteration in range(self.TEST_TIME):
+            self.prepare_iteration()
+            with self.capture_trace_5s(iteration, 1):
+                self.step(1, '启动微信')
+                self.start_weixin()
+            self.finish_weixin_start()
+            self.step(2, '点击性能图片群，进入群聊界面')
+            self.open_chat(self.IMAGE_GROUP)
+            self.step(3, '点击一张图片，向右滑动3次向左滑动3次浏览图片页面')
+            self.open_chat_media('图片')
+            self.horizontal_browse(3, 3)
+            self.step(4, '返回微信主界面')
+            self.return_weixin_home()
+            self.step(5, '点击性能测试群，进入群聊界面')
+            self.open_chat(self.VIDEO_GROUP)
+            self.step(6, '点击一个视频，向右滑动3次向左滑动3次')
+            self.open_chat_media('视频')
+            self.horizontal_browse(3, 3)
+            self.step(7, '长按视频，进入待转发视频页面')
+            self.long_press_current_media()
+            self.step(8, '点击转发给朋友，进入转发视频界面')
+            self.tap('转发给朋友', wait=3)
+            self.step(9, '点击测试账号，进入确认发送界面')
+            self.tap(self.TEST_ACCOUNT, contains=True, min_y=180, max_y=760,
+                     wait=2)
+            self.step(10, '点击发送，完成发送并进入查看视频界面')
+            self.tap('发送', min_y=700, wait=3)
+            self.step(11, '返回微信主界面')
+            self.return_weixin_home()
+            self.step(12, '点击性能测试语音群，进入群聊界面')
+            self.open_chat(self.VOICE_GROUP, self.VOICE_GROUP + '群')
+            self.step(13, '点击一个语音进行播放')
+            self.play_first_voice()
+            self.step(14, '返回微信主界面')
+            self.return_weixin_home()
+            with self.capture_trace_5s(iteration, 15):
+                self.step(15, '滑动返回Home页')
+                self.launcher()

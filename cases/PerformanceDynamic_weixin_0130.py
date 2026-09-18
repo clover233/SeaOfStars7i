@@ -1,47 +1,47 @@
-import logging
-import time
-import openpyxl
-from threading import Timer
 from aw import SeaOfStarsAW
-from cases.CaseBase import Case
+from cases.weixin_common import WeixinCase
 
 
-class PerformanceDynamic_weixin_0130(Case):
-    all_app_package_list = ['']
-    TEST_TIME = 1
-
-    def __init__(self, result_path):
-        super().__init__(result_path)
-        SeaOfStarsAW.current_running_class_name = self.__class__.__name__
-
-    @SeaOfStarsAW.function_log
-    def set_up(self):
-        logging.info('测试环境开始准备')
-        phone_app_list = SeaOfStarsAW.get_app_list()
-        for per_app in self.all_app_package_list:
-            if per_app not in phone_app_list:
-                return False
-        # 清空后台
+class PerformanceDynamic_weixin_0130(WeixinCase):
+    """新版步骤：腾讯新闻、央视新闻及公众号信息流浏览。"""
 
     @SeaOfStarsAW.function_log
     def run_case(self):
-        """
-        测试用例执行
-        """
-        logging.info("用例开始执行")
-        if SeaOfStarsAW.ut_device.locked():
-            SeaOfStarsAW.ut_device.unlock()
-            time.sleep(2)
-
-        for test_time in range(0, self.TEST_TIME):
-            step = 0
-
-            SeaOfStarsAW.start_trace(
-                self.trace_dir_path,
-                self.__class__.__name__,
-                'step_' + str(step),
-                self.screenshot_dir_path,
-            )
-            app_name = "xxxx"
-
-        logging.info('用例执行结束')
+        for iteration in range(self.TEST_TIME):
+            self.prepare_iteration()
+            with self.capture_trace_5s(iteration, 1):
+                self.step(1, '启动微信')
+                self.start_weixin()
+            self.finish_weixin_start()
+            self.step(2, '点击通讯录')
+            self.open_contacts()
+            self.step(3, '点击公众号')
+            self.tap('公众号', min_y=300, max_y=500, wait=3)
+            self.step(4, '点击腾讯新闻的公众号名片')
+            self.open_official_account(self.TENCENT_NEWS_ACCOUNT)
+            self.step(5, '返回公众号界面')
+            self.return_official_list()
+            self.step(6, '点击央视新闻的公众号名片')
+            self.open_official_account(self.CCTV_NEWS_ACCOUNT)
+            self.open_official_chat()
+            self.step(7, '点击屏幕底部文博日历查看详情')
+            self.open_official_feature(('文博日历',), ('打卡笔记',))
+            self.step(8, '浏览任意主题（如打卡笔记），上滑2次，下滑2次')
+            self.browse(2, 2)
+            self.step(9, '返回央视新闻对话界面')
+            self.edge_back(wait=4)
+            self.step(10, '点击屏幕底部夜读查看详情')
+            self.open_official_feature(('夜读',))
+            self.step(11, '返回微信首页')
+            self.return_weixin_home()
+            self.step(12, '点击订阅号')
+            self.open_subscription_feed()
+            self.step(13, '点击腾讯新闻')
+            self.open_subscription_account(self.TENCENT_NEWS_ACCOUNT)
+            self.step(14, '腾讯新闻页面下滑3次')
+            self.browse(3, 0)
+            self.step(15, '返回微信主界面')
+            self.return_weixin_home()
+            with self.capture_trace_5s(iteration, 16):
+                self.step(16, '滑动返回Home页')
+                self.launcher()

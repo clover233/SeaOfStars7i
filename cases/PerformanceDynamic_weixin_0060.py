@@ -1,47 +1,48 @@
-import logging
-import time
-import openpyxl
-from threading import Timer
 from aw import SeaOfStarsAW
-from cases.CaseBase import Case
+from cases.weixin_common import WeixinCase
 
 
-class PerformanceDynamic_weixin_0060(Case):
-    all_app_package_list = ['']
-    TEST_TIME = 1
-
-    def __init__(self, result_path):
-        super().__init__(result_path)
-        SeaOfStarsAW.current_running_class_name = self.__class__.__name__
-
-    @SeaOfStarsAW.function_log
-    def set_up(self):
-        logging.info('测试环境开始准备')
-        phone_app_list = SeaOfStarsAW.get_app_list()
-        for per_app in self.all_app_package_list:
-            if per_app not in phone_app_list:
-                return False
-        # 清空后台
+class PerformanceDynamic_weixin_0060(WeixinCase):
+    """Excel 7.0.2：朋友圈拍摄、相册预览与位置。"""
 
     @SeaOfStarsAW.function_log
     def run_case(self):
-        """
-        测试用例执行
-        """
-        logging.info("用例开始执行")
-        if SeaOfStarsAW.ut_device.locked():
-            SeaOfStarsAW.ut_device.unlock()
-            time.sleep(2)
-
-        for test_time in range(0, self.TEST_TIME):
-            step = 0
-
-            SeaOfStarsAW.start_trace(
-                self.trace_dir_path,
-                self.__class__.__name__,
-                'step_' + str(step),
-                self.screenshot_dir_path,
-            )
-            app_name = "xxxx"
-
-        logging.info('用例执行结束')
+        for iteration in range(self.TEST_TIME):
+            self.prepare_iteration()
+            with self.capture_trace_5s(iteration, 1):
+                self.step(1, '启动微信')
+                self.start_weixin()
+            self.finish_weixin_start()
+            self.step(2, '进入朋友圈')
+            self.tap('发现', min_y=760, wait=2)
+            self.tap('朋友圈', min_y=80, max_y=220, wait=4)
+            self.step(3, '点击右上角相机')
+            self.open_moments_camera_menu()
+            self.step(4, '点击拍摄')
+            self.tap('拍摄', min_y=600, wait=3)
+            self.step(5, '关闭相机，返回朋友圈')
+            self.tap('关闭', max_y=140, wait=3)
+            self.step(6, '再次点击右上角相机')
+            self.open_moments_camera_menu()
+            self.step(7, '从手机相册选择图片3张')
+            self.tap('从手机相册选择', min_y=650, wait=4)
+            self.select_photos(3)
+            self.step(8, '点击预览')
+            self.tap('预览(3)', contains=True, min_y=740, wait=3)
+            self.step(9, '左滑2次浏览图片')
+            self.horizontal_browse(0, 2)
+            self.step(10, '点击右上角完成')
+            self.tap('完成', contains=True, min_y=740, wait=4)
+            self.step(11, '点击所在位置')
+            self.tap('所在位置', min_y=350, max_y=650, wait=4)
+            self.step(12, '选择第一个具体位置并完成')
+            self.choose_first_moment_location()
+            self.step(13, '取消发表（替代已失效的左滑返回）')
+            self.tap('取消', max_y=120, wait=2)
+            self.step(14, '点击不保留')
+            self.tap('不保留', min_y=500, wait=3)
+            self.step(15, '返回微信主界面')
+            self.return_weixin_home()
+            with self.capture_trace_5s(iteration, 16):
+                self.step(16, '滑动返回Home页')
+                self.launcher()

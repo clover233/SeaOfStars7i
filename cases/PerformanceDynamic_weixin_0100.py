@@ -1,132 +1,45 @@
-import logging
-import time
-import openpyxl
-from threading import Timer
 from aw import SeaOfStarsAW
-from cases.CaseBase import Case
+from cases.weixin_common import WeixinCase
 
 
-class PerformanceDynamic_weixin_0100(Case):
-    all_app_package_list = ['']
-    TEST_TIME = 1
-
-    def __init__(self, result_path):
-        super().__init__(result_path)
-        SeaOfStarsAW.current_running_class_name = self.__class__.__name__
-
-    @SeaOfStarsAW.function_log
-    def set_up(self):
-        logging.info('测试环境开始准备')
-        phone_app_list = SeaOfStarsAW.get_app_list()
-        for per_app in self.all_app_package_list:
-            if per_app not in phone_app_list:
-                return False
-    #     清空后台
+class PerformanceDynamic_weixin_0100(WeixinCase):
+    """Excel 7.0.2：视频号、直播与游戏浏览。"""
 
     @SeaOfStarsAW.function_log
     def run_case(self):
-        """
-        测试用例执行
-        """
-        logging.info("用例开始执行")
-        if SeaOfStarsAW.ut_device.locked():
-            SeaOfStarsAW.ut_device.unlock()
-            time.sleep(2)
-
-        for test_time in range(0, self.TEST_TIME):
-            # step = 0
-            # SeaOfStarsAW.start_trace(self.trace_dir_path, self.__class__.__name__, 'step_' + str(step),
-            #                          self.screenshot_dir_path)
-
-            logging.info('启动微信')
-            SeaOfStarsAW.trace_thread.add_log('微信', '微信启动')
-            SeaOfStarsAW.ut_device.click(0.606, 0.585)
-            logging.info('等待5s')
-            time.sleep(5)
-            SeaOfStarsAW.trace_thread.add_log('微信', '打开视频号')
-            logging.info('点击发现')
-            SeaOfStarsAW.ut_device(label='发现').click()
-            time.sleep(2)
-            logging.info('点击视频号')
-            SeaOfStarsAW.ut_device(label='视频号').click()
-            time.sleep(2)
-            logging.info('上滑6次')
-            SeaOfStarsAW.trace_thread.add_log('微信', '浏览视频号')
-            for _ in range(3):
-                SeaOfStarsAW.ut_device.swipe_up()
-                time.sleep(4)
-            logging.info('点击返回')
-            SeaOfStarsAW.ut_device.click(0.043, 0.075)
-            time.sleep(2)
-            SeaOfStarsAW.trace_thread.add_log('微信', '打开直播')
-            logging.info('点击直播')
-            SeaOfStarsAW.ut_device(label='直播').click()
-            time.sleep(2)
-            logging.info('点击第一个直播')
-            SeaOfStarsAW.ut_device.click(0.24, 0.324)
-            time.sleep(2)
-            SeaOfStarsAW.trace_thread.add_log('微信', '切换浏览直播')
-            logging.info('上滑6次')
-            for _ in range(3):
-                SeaOfStarsAW.ut_device.swipe_up()
-                time.sleep(4)
-            logging.info('返回')
-            SeaOfStarsAW.ut_device.click(0.936, 0.081)
-            time.sleep(2)
-            logging.info('返回主页')
-            SeaOfStarsAW.ut_device(label='返回').click()
-            time.sleep(2)
-            logging.info('点击购物')
-            SeaOfStarsAW.trace_thread.add_log('微信', '打开购物')
-            SeaOfStarsAW.ut_device(label='购物').click()
-            time.sleep(2)
-            SeaOfStarsAW.trace_thread.add_log('微信', '购物界面浏览')
-            logging.info('上滑6次')
-            for _ in range(3):
-                SeaOfStarsAW.ut_device.swipe_up()
-                time.sleep(2)
-            logging.info('下滑6次')
-            for _ in range(3):
-                SeaOfStarsAW.ut_device.swipe_down()
-                time.sleep(2)
-            logging.info('点击逛')
-            SeaOfStarsAW.trace_thread.add_log('微信', '打开逛')
-            SeaOfStarsAW.ut_device.click(0.3, 0.95)
-            time.sleep(2)
-            logging.info('上滑6次')
-            SeaOfStarsAW.trace_thread.add_log('微信', '逛内容浏览')
-            for _ in range(3):
-                SeaOfStarsAW.ut_device.swipe_up()
-                time.sleep(2)
-            logging.info('下滑6次')
-            for _ in range(3):
-                SeaOfStarsAW.ut_device.swipe_down()
-                time.sleep(2)
-            logging.info('返回')
-            SeaOfStarsAW.ut_device(label='关闭').click()
-            time.sleep(2)
-            SeaOfStarsAW.trace_thread.add_log('微信', '打开游戏')
-            logging.info('点击游戏')
-            SeaOfStarsAW.ut_device(label='游戏').click()
-            time.sleep(2)
-            SeaOfStarsAW.trace_thread.add_log('微信', '游戏内容浏览')
-            logging.info('上滑6次')
-            for _ in range(3):
-                SeaOfStarsAW.ut_device.swipe_up()
-                time.sleep(2)
-            logging.info('下滑6次')
-            for _ in range(3):
-                SeaOfStarsAW.ut_device.swipe_down()
-                time.sleep(2)
-            logging.info('返回')
-            SeaOfStarsAW.trace_thread.add_log('微信', '返回桌面')
-            SeaOfStarsAW.ut_device.click(0.043, 0.072)
-            time.sleep(2)
-            logging.info('返回首页')
-            SeaOfStarsAW.ut_device.click(0.126, 0.95)
-            time.sleep(2)
-            logging.info('返回桌面')
-            SeaOfStarsAW.ut_device.home()
-            time.sleep(2)
-
-        logging.info('用例执行结束')
+        for iteration in range(self.TEST_TIME):
+            self.prepare_iteration()
+            with self.capture_trace_5s(iteration, 1):
+                self.step(1, '启动微信')
+                self.start_weixin()
+            self.finish_weixin_start()
+            self.step(2, '点击发现')
+            self.tap('发现', min_y=760, wait=2)
+            self.step(3, '点击视频号')
+            self.tap('视频号', min_y=80, max_y=300, wait=5)
+            self.dismiss_content_prompts()
+            self.step(4, '上滑6次浏览视频号')
+            self.browse(6, 0)
+            self.step(5, '返回发现页')
+            self.return_discover()
+            self.step(6, '点击直播')
+            self.tap('直播', min_y=100, max_y=360, wait=5)
+            self.dismiss_content_prompts()
+            self.step(7, '点击第一个直播')
+            self.open_first_live()
+            self.step(8, '上滑6次切换浏览直播')
+            self.browse(6, 0)
+            self.step(9, '返回发现页')
+            self.return_discover()
+            self.step(10, '点击游戏')
+            self.tap('游戏', min_y=450, max_y=740, wait=6)
+            self.dismiss_content_prompts()
+            self.step(11, '游戏首页上滑6次、下滑6次')
+            self.browse(6, 6)
+            self.step(12, '返回发现页')
+            self.return_discover()
+            self.step(13, '返回微信主界面')
+            self.return_weixin_home()
+            with self.capture_trace_5s(iteration, 14):
+                self.step(14, '滑动返回Home页')
+                self.launcher()

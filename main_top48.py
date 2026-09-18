@@ -63,7 +63,6 @@ from cases.PerformanceDynamic_xhs_0010 import PerformanceDynamic_xhs_0010
 from cases.PerformanceDynamic_xhs_0020 import PerformanceDynamic_xhs_0020
 from cases.PerformanceDynamic_xhs_0030 import PerformanceDynamic_xhs_0030
 from cases.PerformanceDynamic_xianyu_0010 import PerformanceDynamic_xianyu_0010
-from cases.PerformanceDynamic_xianyu_0020 import PerformanceDynamic_xianyu_0020
 from cases.PerformanceDynamic_xiechengtrip_0010 import PerformanceDynamic_xiechengtrip_0010
 from cases.PerformanceDynamic_xiechengtrip_0020 import PerformanceDynamic_xiechengtrip_0020
 from cases.PerformanceDynamic_youku_0020 import PerformanceDynamic_youku_0020
@@ -696,12 +695,8 @@ Basic5 = [
     PerformanceDynamic_weixin_0010,
 ]
 
-Basic0 = [
-    PerformanceDynamic_weather_0010,
-]
-
 # Basics = [Basic1, Basic2, Basic3, Basic4, Basic5]
-Basics = [Basic0]
+Basics = [Basic1]
 
 # 按装订区域中的绿色按钮以运行脚本。
 if __name__ == '__main__':

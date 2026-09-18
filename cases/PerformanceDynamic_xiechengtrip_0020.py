@@ -1,118 +1,41 @@
-import logging
-import time
-import openpyxl
-from threading import Timer
 from aw import SeaOfStarsAW
-from cases.CaseBase import Case
+from cases.xiechengtrip_common import XiechengTripCase
 
 
-class PerformanceDynamic_xiechengtrip_0020(Case):
-    all_app_package_list = ['']
-    TEST_TIME = 1
-
-    def __init__(self, result_path):
-        super().__init__(result_path)
-        SeaOfStarsAW.current_running_class_name = self.__class__.__name__
-
-    @SeaOfStarsAW.function_log
-    def set_up(self):
-        logging.info('测试环境开始准备')
-        phone_app_list = SeaOfStarsAW.get_app_list()
-        for per_app in self.all_app_package_list:
-            if per_app not in phone_app_list:
-                return False
-    #     清空后台
+class PerformanceDynamic_xiechengtrip_0020(XiechengTripCase):
+    """携程机票和火车票结果浏览。"""
 
     @SeaOfStarsAW.function_log
     def run_case(self):
-        """
-        测试用例执行
-        """
-        logging.info("用例开始执行")
-        if SeaOfStarsAW.ut_device.locked():
-            SeaOfStarsAW.ut_device.unlock()
-            time.sleep(2)
+        for iteration in range(self.TEST_TIME):
+            self.prepare_iteration()
+            with self.capture_trace_5s(iteration, 1):
+                self.step(1, '启动携程旅行')
+                self.start_xiecheng()
 
-        for test_time in range(0, self.TEST_TIME):
-            step = 0
-            # todo 后续放开log
-            # SeaOfStarsAW.start_trace(self.trace_dir_path, self.__class__.__name__, 'step_' + str(step),
-            #                          self.screenshot_dir_path)
-            app_name ="携程"
+            self.step(2, '点击机票，并关闭可选弹窗')
+            self.open_flight()
+            self.step(3, '点击查询，进入机票搜索结果')
+            self.query_flight()
+            self.step(4, '机票结果页上滑3次、下滑4次')
+            self.browse(3, 4)
+            self.step(5, '查看第一条机票搜索结果详情')
+            self.open_first_flight()
+            self.step(6, '返回携程旅行首页')
+            self.return_home()
+            self.step(7, '点击火车票')
+            self.open_train()
+            self.step(8, '点击查询，进入火车票搜索结果')
+            self.query_train()
+            self.step(9, '火车票结果页上滑3次、下滑4次')
+            self.browse(3, 4)
+            self.step(10, '查看第一条火车票搜索结果详情')
+            self.open_first_train()
+            self.step(11, '点击预订，进入订单填写页但不提交')
+            self.book_first_train()
+            self.step(12, '返回携程旅行主界面')
+            self.return_home()
 
-            step1 = "'1、打开携程,等待10s'"
-            logging.info('启动携程')
-            SeaOfStarsAW.trace_thread.add_log(app_name, step1)
-            SeaOfStarsAW.ut_device.swipe_left()
-            SeaOfStarsAW.ut_device.click(0.626, 0.717)
-            time.sleep(10)
-
-            step2 = "2、点击机票 "
-            SeaOfStarsAW.trace_thread.add_log(app_name, step2)
-            SeaOfStarsAW.ut_device(label="机票").click()
-
-            step3 = "3、点击查询"
-            SeaOfStarsAW.trace_thread.add_log(app_name, step3)
-            SeaOfStarsAW.ut_device(label="查询").click()
-
-
-            step4 = "4、上滑3次 下滑4次"
-            SeaOfStarsAW.trace_thread.add_log(app_name, step4)
-            for i in range(3):
-                SeaOfStarsAW.ut_device.swipe_up()
-                time.sleep(2)
-            for i in range(4):
-                SeaOfStarsAW.ut_device.swipe_down()
-                time.sleep(2)
-
-            step5 = "5、查第一条结果"
-            SeaOfStarsAW.trace_thread.add_log(app_name, step5)
-            SeaOfStarsAW.ut_device.click(0.532, 0.226)
-
-            step6 = "6、返回首页"
-            SeaOfStarsAW.trace_thread.add_log(app_name, step6)
-            SeaOfStarsAW.ut_device.click(0.048, 0.084)
-            SeaOfStarsAW.ut_device.click(0.048, 0.084)
-            SeaOfStarsAW.ut_device.click(0.048, 0.084)
-
-            step7 = "7、点击火车票"
-            SeaOfStarsAW.trace_thread.add_log(app_name, step7)
-            SeaOfStarsAW.ut_device(label="火车票").click()
-
-            step8 = "8、点击查询"
-            SeaOfStarsAW.trace_thread.add_log(app_name, step8)
-            SeaOfStarsAW.ut_device(label="查询").click()
-
-
-            step9 = "9、上滑3次 下滑4次"
-            SeaOfStarsAW.trace_thread.add_log(app_name, step9)
-            for i in range(3):
-                SeaOfStarsAW.ut_device.swipe_up()
-                time.sleep(2)
-            for i in range(4):
-                SeaOfStarsAW.ut_device.swipe_down()
-                time.sleep(2)
-
-
-            step10 = "10、查看第一条结果"
-            SeaOfStarsAW.trace_thread.add_log(app_name, step10)
-            SeaOfStarsAW.ut_device.click(0.532, 0.226)
-
-            step11 = "11、点击 预定 "
-            SeaOfStarsAW.trace_thread.add_log(app_name, step11)
-            SeaOfStarsAW.ut_device.click(0.88, 0.349)
-
-            step12 = "12、返回主界面"
-            SeaOfStarsAW.trace_thread.add_log(app_name, step12)
-            SeaOfStarsAW.ut_device.click(0.048, 0.084)
-            SeaOfStarsAW.ut_device.click(0.048, 0.084)
-            SeaOfStarsAW.ut_device.click(0.048, 0.084)
-            SeaOfStarsAW.ut_device.click(0.048, 0.084)
-
-            step13 = "13、返回home"
-            SeaOfStarsAW.trace_thread.add_log(app_name, step13)
-            SeaOfStarsAW.ut_device.home()
-            SeaOfStarsAW.ut_device.swipe_right()
-            time.sleep(1)
-
-        logging.info('用例执行结束')
+            with self.capture_trace_5s(iteration, 13):
+                self.step(13, '滑动返回Home页')
+                self.launcher()
