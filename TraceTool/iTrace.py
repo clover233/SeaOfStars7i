@@ -29,8 +29,11 @@ def xctrace_environment():
 
 class iTraceThread(threading.Thread):
 
-    TRACE_TIME_LIMIT_SECONDS = 5
-    TRACE_SAVE_GRACE_SECONDS = 60
+    TRACE_TEMPLATE = 'Activity Monitor'
+    # xctrace 自身的安全上限保持默认 600s；实际短采集由 5s 定时器主动
+    # 发送 SIGINT 结束，避免依赖过短的 --time-limit 生成不完整文档。
+    TRACE_TIME_LIMIT_SECONDS = 600
+    TRACE_CAPTURE_SECONDS = 5
 
     def __init__(self):
         threading.Thread.__init__(self)
@@ -40,13 +43,14 @@ class iTraceThread(threading.Thread):
         self.start_time = None
         self.log_path = None
         self.start_error = None
+        self.finish_error = None
         self.recording_finished = threading.Event()
         self.command_finished = threading.Event()
         self.command_finished.set()
 
     def start_trace(self, trace_dir, trace_name):
-        # 上一份 trace 可以在后台保存，但 xctrace 不应并发启动第二份。
-        # 只在下一次真正要开始采集时等待上一个命令收尾。
+        # 防止两个 xctrace 命令并发运行；正常情况下 stop_trace 会等上一份
+        # 完整保存，这里仍保留等待作为安全保护。
         if not self.command_finished.is_set():
             logging.info('等待上一份 Trace 保存完成...')
         self.command_finished.wait()
@@ -55,6 +59,7 @@ class iTraceThread(threading.Thread):
         self.save_dir = trace_dir
         self.save_name = trace_name
         self.start_error = None
+        self.finish_error = None
         self.realStartTrace = False
         self.process = None
         # 请求标志最后写入，避免工作线程先启动进程又被这里清空。
@@ -68,17 +73,21 @@ class iTraceThread(threading.Thread):
             time.sleep(0.1)
 
     def stop_trace(self):
-        if self.process:
-            self.isLetTraceRun = False
-            # 录制线程按 5s time-limit（并带 SIGINT 兜底）统一结束采集，
-            # stop_trace 只等待采集结束，不按用例步骤长短提前截断。
-            if not self.recording_finished.is_set():
-                logging.info("等待 5s Trace 自动结束...")
-            self.recording_finished.wait()
-            if self.process:
-                logging.info("Trace 采集已结束，输出文件继续在后台保存")
-        else:
+        if self.command_finished.is_set():
+            if self.finish_error:
+                raise RuntimeError(self.finish_error)
             logging.info("Trace进程未运行！无需停止.")
+            return
+
+        # 每个用例都通过公共入口执行到这里。即使用例步骤早于 5s 完成，
+        # 也等定时器在实际开录约 5s 后主动停止；随后等待 xctrace 完整落盘。
+        if not self.recording_finished.is_set():
+            logging.info("等待约%ss后停止 Trace...", self.TRACE_CAPTURE_SECONDS)
+        self.recording_finished.wait()
+        self.command_finished.wait()
+        if self.finish_error:
+            raise RuntimeError(self.finish_error)
+        logging.info("Trace 已停止并完成保存")
 
     def run(self):
         logging.info("trace线程开始运行")
@@ -91,22 +100,19 @@ class iTraceThread(threading.Thread):
                 end_time = None
                 start_time_stamp = None
                 stop_timer = None
-                finish_timer = None
                 self.start_time = None
                 time_stamp = time.strftime("%Y%m%d_%H%M%S", time.localtime())
                 temptrace_path = os.path.join(self.save_dir, "temp_{}.trace".format(time_stamp))
                 self.log_path = os.path.join(self.save_dir, "temp_{}.log".format(time_stamp))
                 if os.path.exists(self.log_path):
                     os.remove(self.log_path)
+                Path(self.log_path).touch()
                 # command = ['xctrace', 'record', '--device-name', 'iPhone (16.3.1)', '--template', 'UX-HitchAndMetal',
                 #            '--all-processes', '--output', temptrace_path, "--time-limit", '410s']
-                template_path = Path(__file__).resolve().parent / 'Templates' / 'ActivityMonitor.tracetemplate'
                 command = ['xctrace', 'record', '--device-name', 'iPhone17 (26.6.1)', '--template',
-                           'ActivityMonitor.tracetemplate', '--all-processes', '--output', temptrace_path, "--time-limit",
+                           self.TRACE_TEMPLATE, '--all-processes', '--output', temptrace_path, "--time-limit",
                            '{}s'.format(self.TRACE_TIME_LIMIT_SECONDS)]
                 try:
-                    if not template_path.is_file():
-                        raise FileNotFoundError('采集模板不存在: {}'.format(template_path))
                     self.process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                                     env=xctrace_environment())
                 except OSError as err:
@@ -126,33 +132,22 @@ class iTraceThread(threading.Thread):
                             start_time_stamp = time.strftime("%Y%m%d_%H%M%S", time.localtime())
 
                             self.realStartTrace = True
-                            # Xcode 26 beta 在部分真机/模板组合下会忽略
-                            # --time-limit，显式发送一次 Ctrl-C 作为 5s 兜底。
+                            # --time-limit 保持 600s 作为安全上限；实际开录约
+                            # 5s 后主动 Ctrl-C，让 xctrace 走正常停止/保存流程。
                             process = self.process
-                            def finish_stalled_save():
+                            def stop_after_capture():
                                 if process and process.poll() is None:
-                                    logging.warning(
-                                        'Trace停止后超过%ss仍未保存完成，终止xctrace以完成落盘',
-                                        self.TRACE_SAVE_GRACE_SECONDS)
-                                    try:
-                                        process.terminate()
-                                    except OSError:
-                                        logging.exception('Trace保存进程终止失败')
-
-                            def stop_at_limit():
-                                nonlocal finish_timer
-                                if process and process.poll() is None:
-                                    logging.info('Trace达到5s，发送停止信号')
+                                    logging.info(
+                                        'Trace已采集约%ss，调用停止流程',
+                                        self.TRACE_CAPTURE_SECONDS)
+                                    self.isLetTraceRun = False
                                     try:
                                         process.send_signal(signal.SIGINT)
-                                        finish_timer = threading.Timer(
-                                            self.TRACE_SAVE_GRACE_SECONDS,
-                                            finish_stalled_save)
-                                        finish_timer.start()
                                     except OSError:
                                         logging.exception('Trace停止信号发送失败')
                             stop_timer = threading.Timer(
-                                self.TRACE_TIME_LIMIT_SECONDS, stop_at_limit)
+                                self.TRACE_CAPTURE_SECONDS,
+                                stop_after_capture)
                             stop_timer.start()
                         if ("Stopping recording" in line
                                 or "Reached specified time limit" in line):
@@ -163,11 +158,9 @@ class iTraceThread(threading.Thread):
                 return_code = self.process.wait()
                 if stop_timer is not None:
                     stop_timer.cancel()
-                if finish_timer is not None:
-                    finish_timer.cancel()
                 self.process = None
                 self.realStartTrace = False
-                # time-limit 到期时 stop_trace 可能尚未被调用，不能因为
+                # 定时主动停止时 stop_trace 可能尚未被调用，不能因为
                 # isLetTraceRun 仍为 True 而紧接着开始第二份 trace。
                 self.isLetTraceRun = False
                 self.recording_finished.set()
@@ -182,18 +175,21 @@ class iTraceThread(threading.Thread):
                 if end_time:
                     # 真正的采集时间
                     capture_time = end_time - self.start_time
-                # 重命名文件 - 等待2秒保证文件完全生成,通过线程避免阻塞
+                # process.wait() 返回表示 xctrace 已完成落盘，此时同步重命名；
+                # stop_trace 只有在重命名完成后才会返回。
                 new_trace_name = "{}-{}({}s).trace".format(self.save_name, start_time_stamp, int(capture_time))
                 new_trace_path = os.path.join(self.save_dir, new_trace_name)
                 new_log_name = "{}-{}({}s).log".format(self.save_name, start_time_stamp, int(capture_time))
                 new_log_path = os.path.join(self.save_dir, new_log_name)
-                rename_file = lambda src, dst: os.rename(src, dst)
-                timer = threading.Timer(2, rename_file, [temptrace_path, new_trace_path])
-                timer.start()
-                timer = threading.Timer(2, rename_file, [self.log_path, new_log_path])
-                timer.start()
-                self.start_time = None
-                self.command_finished.set()
+                try:
+                    os.rename(temptrace_path, new_trace_path)
+                    os.rename(self.log_path, new_log_path)
+                except OSError as err:
+                    self.finish_error = 'Trace保存或重命名失败: {}'.format(err)
+                    logging.exception(self.finish_error)
+                finally:
+                    self.start_time = None
+                    self.command_finished.set()
                 # os.rename(trace_path, new_trace_path)
             if tips_bool:
                 logging.info("等待trace抓取命令......")
@@ -226,5 +222,5 @@ if __name__ == "__main__":
     time.sleep(2)
     t_thread.add_log("抖音", "应用启动")
     time.sleep(3)
-    # 5s 到期后停止采集，输出文件在后台继续保存
+    # 实际开录约5s后主动停止，并等待输出文件完整保存
     t_thread.stop_trace()
