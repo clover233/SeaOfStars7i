@@ -102,7 +102,7 @@ class iTraceThread(threading.Thread):
                 #            '--all-processes', '--output', temptrace_path, "--time-limit", '410s']
                 template_path = Path(__file__).resolve().parent / 'Templates' / 'ActivityMonitor.tracetemplate'
                 command = ['xctrace', 'record', '--device-name', 'iPhone17 (26.6.1)', '--template',
-                           str(template_path), '--all-processes', '--output', temptrace_path, "--time-limit",
+                           'ActivityMonitor.tracetemplate', '--all-processes', '--output', temptrace_path, "--time-limit",
                            '{}s'.format(self.TRACE_TIME_LIMIT_SECONDS)]
                 try:
                     if not template_path.is_file():

@@ -1,6 +1,8 @@
 import logging
 import os
+import signal
 import shutil
+import subprocess
 import time
 import logging
 import openpyxl
@@ -180,94 +182,94 @@ fail_num = 0
 Basic1 = [
     PerformanceDynamic_fuzai,
     PerformanceDynamic_fanqie_0010,
-    PerformanceDynamic_camera_0030,
-    PerformanceDynamic_weixin_0030,
-    PerformanceDynamic_fanqiechangting_0010,
-    PerformanceDynamic_weixin_0010,
-    PerformanceDynamic_weixin_0030,
-    PerformanceDynamic_douyin_0010,
-    PerformanceDynamic_weixin_0040,
-    PerformanceDynamic_qianwen_0010,
-    PerformanceDynamic_weixin_0120,
-    PerformanceDynamic_hongguomianfeiduanju_0020,
-    PerformanceDynamic_weixin_0030,
-    PerformanceDynamic_qq_0020,
-    PerformanceDynamic_weixin_0010,
-    PerformanceDynamic_douyinjisu_0010,
-    PerformanceDynamic_meituan_0010,
-    PerformanceDynamic_douyin_0030,
-    PerformanceDynamic_bilibili_0040,
-    PerformanceDynamic_weixin_0040,
-    PerformanceDynamic_doubao_0010,
-    PerformanceDynamic_jingdong_0040,
-    PerformanceDynamic_weixin_0120,
-    PerformanceDynamic_ths_0040,
-    PerformanceDynamic_xianyu_0010,
-    PerformanceDynamic_weixin_0030,
-    PerformanceDynamic_camera_0020,
-    PerformanceDynamic_weather_0010,
-    PerformanceDynamic_autonavi_0070,
-    PerformanceDynamic_weixin_0010,
-    PerformanceDynamic_douyin_0010,
-    PerformanceDynamic_pinduoduo_0010,
-    PerformanceDynamic_douyin_0090,
-    PerformanceDynamic_weixin_0040,
-    PerformanceDynamic_meituan_0080,
-    PerformanceDynamic_eggparty_0010,
-    PerformanceDynamic_weixin_0120,
-    PerformanceDynamic_momo_0010,
-    PerformanceDynamic_autonavi_0080,
-    PerformanceDynamic_jrtt_0010,
-    PerformanceDynamic_call_0010,
-    PerformanceDynamic_weixin_0030,
-    PerformanceDynamic_autonavi_0060,
-    PerformanceDynamic_xhs_0030,
-    PerformanceDynamic_douyin_0040,
-    PerformanceDynamic_weixin_0010,
-    PerformanceDynamic_hwvmall_0020,
-    PerformanceDynamic_qq_0010,
-    PerformanceDynamic_fanqiechangting_0010,
-    PerformanceDynamic_weixin_0040,
-    PerformanceDynamic_call_0020,
-    PerformanceDynamic_douyinjisu_0010,
-    PerformanceDynamic_wpsoffice_0020,
-    PerformanceDynamic_weipinhui_0030,
-    PerformanceDynamic_weixin_0120,
-    PerformanceDynamic_qunaer_0010,
-    PerformanceDynamic_ths_0050,
-    PerformanceDynamic_weixin_0030,
-    PerformanceDynamic_alipay_0010,
-    PerformanceDynamic_douyin_0010,
-    PerformanceDynamic_photo_0030,
-    PerformanceDynamic_weixin_0010,
-    PerformanceDynamic_jingdong_0010,
-    PerformanceDynamic_taptap_0010,
-    PerformanceDynamic_weixin_0040,
-    PerformanceDynamic_alipay_0020,
-    PerformanceDynamic_weibo_0030,
-    PerformanceDynamic_alipay_0010,
-    PerformanceDynamic_hongguomianfeiduanju_0010,
-    PerformanceDynamic_weixin_0120,
-    PerformanceDynamic_bilibili_0030,
-    PerformanceDynamic_weibo_0020,
-    PerformanceDynamic_pinduoduo_0010,
-    PerformanceDynamic_weixin_0030,
-    PerformanceDynamic_douyin_0030,
-    PerformanceDynamic_yuanbao_0010,
-    PerformanceDynamic_tencentnews_0010,
-    PerformanceDynamic_weixin_0150,
-    PerformanceDynamic_taobao_0010,
-    PerformanceDynamic_zuoyebang_0010,
-    PerformanceDynamic_kuaishou_0010,
-    PerformanceDynamic_weixin_0170,
-    PerformanceDynamic_cloudflashpay_0010,
-    PerformanceDynamic_baidu_0010,
-    PerformanceDynamic_weixin_0140,
-    PerformanceDynamic_fanqiechangting_0010,
-    PerformanceDynamic_douyinjisu_0010,
-    PerformanceDynamic_huaweihealth_0020,
-    PerformanceDynamic_douyin_0010,
-    PerformanceDynamic_weixin_0190,
+    # PerformanceDynamic_camera_0030,
+    # PerformanceDynamic_weixin_0030,
+    # PerformanceDynamic_fanqiechangting_0010,
+    # PerformanceDynamic_weixin_0010,
+    # PerformanceDynamic_weixin_0030,
+    # PerformanceDynamic_douyin_0010,
+    # PerformanceDynamic_weixin_0040,
+    # PerformanceDynamic_qianwen_0010,
+    # PerformanceDynamic_weixin_0120,
+    # PerformanceDynamic_hongguomianfeiduanju_0020,
+    # PerformanceDynamic_weixin_0030,
+    # PerformanceDynamic_qq_0020,
+    # PerformanceDynamic_weixin_0010,
+    # PerformanceDynamic_douyinjisu_0010,
+    # PerformanceDynamic_meituan_0010,
+    # PerformanceDynamic_douyin_0030,
+    # PerformanceDynamic_bilibili_0040,
+    # PerformanceDynamic_weixin_0040,
+    # PerformanceDynamic_doubao_0010,
+    # PerformanceDynamic_jingdong_0040,
+    # PerformanceDynamic_weixin_0120,
+    # PerformanceDynamic_ths_0040,
+    # PerformanceDynamic_xianyu_0010,
+    # PerformanceDynamic_weixin_0030,
+    # PerformanceDynamic_camera_0020,
+    # PerformanceDynamic_weather_0010,
+    # PerformanceDynamic_autonavi_0070,
+    # PerformanceDynamic_weixin_0010,
+    # PerformanceDynamic_douyin_0010,
+    # PerformanceDynamic_pinduoduo_0010,
+    # PerformanceDynamic_douyin_0090,
+    # PerformanceDynamic_weixin_0040,
+    # PerformanceDynamic_meituan_0080,
+    # PerformanceDynamic_eggparty_0010,
+    # PerformanceDynamic_weixin_0120,
+    # PerformanceDynamic_momo_0010,
+    # PerformanceDynamic_autonavi_0080,
+    # PerformanceDynamic_jrtt_0010,
+    # PerformanceDynamic_call_0010,
+    # PerformanceDynamic_weixin_0030,
+    # PerformanceDynamic_autonavi_0060,
+    # PerformanceDynamic_xhs_0030,
+    # PerformanceDynamic_douyin_0040,
+    # PerformanceDynamic_weixin_0010,
+    # PerformanceDynamic_hwvmall_0020,
+    # PerformanceDynamic_qq_0010,
+    # PerformanceDynamic_fanqiechangting_0010,
+    # PerformanceDynamic_weixin_0040,
+    # PerformanceDynamic_call_0020,
+    # PerformanceDynamic_douyinjisu_0010,
+    # PerformanceDynamic_wpsoffice_0020,
+    # PerformanceDynamic_weipinhui_0030,
+    # PerformanceDynamic_weixin_0120,
+    # PerformanceDynamic_qunaer_0010,
+    # PerformanceDynamic_ths_0050,
+    # PerformanceDynamic_weixin_0030,
+    # PerformanceDynamic_alipay_0010,
+    # PerformanceDynamic_douyin_0010,
+    # PerformanceDynamic_photo_0030,
+    # PerformanceDynamic_weixin_0010,
+    # PerformanceDynamic_jingdong_0010,
+    # PerformanceDynamic_taptap_0010,
+    # PerformanceDynamic_weixin_0040,
+    # PerformanceDynamic_alipay_0020,
+    # PerformanceDynamic_weibo_0030,
+    # PerformanceDynamic_alipay_0010,
+    # PerformanceDynamic_hongguomianfeiduanju_0010,
+    # PerformanceDynamic_weixin_0120,
+    # PerformanceDynamic_bilibili_0030,
+    # PerformanceDynamic_weibo_0020,
+    # PerformanceDynamic_pinduoduo_0010,
+    # PerformanceDynamic_weixin_0030,
+    # PerformanceDynamic_douyin_0030,
+    # PerformanceDynamic_yuanbao_0010,
+    # PerformanceDynamic_tencentnews_0010,
+    # PerformanceDynamic_weixin_0150,
+    # PerformanceDynamic_taobao_0010,
+    # PerformanceDynamic_zuoyebang_0010,
+    # PerformanceDynamic_kuaishou_0010,
+    # PerformanceDynamic_weixin_0170,
+    # PerformanceDynamic_cloudflashpay_0010,
+    # PerformanceDynamic_baidu_0010,
+    # PerformanceDynamic_weixin_0140,
+    # PerformanceDynamic_fanqiechangting_0010,
+    # PerformanceDynamic_douyinjisu_0010,
+    # PerformanceDynamic_huaweihealth_0020,
+    # PerformanceDynamic_douyin_0010,
+    # PerformanceDynamic_weixin_0190,
 ]
 
 Basic2 = [
@@ -698,12 +700,58 @@ Basic5 = [
 # Basics = [Basic1, Basic2, Basic3, Basic4, Basic5]
 Basics = [Basic1]
 
+
+VMSTATS_COMMAND = """\
+while true; do
+  printf '[%s] ' "$(date '+%Y-%m-%d %H:%M:%S')"
+  curl -s "http://127.0.0.1:8100/wda/device/vmStats" | jq -c .
+  sleep 15
+done
+"""
+
+
+def start_vmstats_collector():
+    vmstats_log_path = os.path.join(Result_Dir_Path, 'vmstats.log')
+    vmstats_log = open(vmstats_log_path, 'a', encoding='utf-8')
+    try:
+        process = subprocess.Popen(
+            ['/bin/bash', '-c', VMSTATS_COMMAND],
+            stdout=vmstats_log,
+            start_new_session=True,
+        )
+    except Exception:
+        vmstats_log.close()
+        raise
+
+    logging.info('vmStats collection started: %s', vmstats_log_path)
+    return process, vmstats_log
+
+
+def stop_vmstats_collector(process, vmstats_log):
+    if process is not None and process.poll() is None:
+        try:
+            os.killpg(process.pid, signal.SIGTERM)
+            process.wait(timeout=5)
+        except ProcessLookupError:
+            pass
+        except subprocess.TimeoutExpired:
+            os.killpg(process.pid, signal.SIGKILL)
+            process.wait()
+
+    if vmstats_log is not None:
+        vmstats_log.close()
+    logging.info('vmStats collection stopped')
+
+
 # 按装订区域中的绿色按钮以运行脚本。
 if __name__ == '__main__':
     result_dict = {'case_name':[],'success':[]}
-    SeaOfStarsAW.init_device()
-    SeaOfStarsAW.start_trace_thread()
+    vmstats_process = None
+    vmstats_log = None
     try:
+        vmstats_process, vmstats_log = start_vmstats_collector()
+        SeaOfStarsAW.init_device()
+        SeaOfStarsAW.start_trace_thread()
         for _ in range(1):
             for Basic in Basics:
                 for single_case in Basic:
@@ -742,5 +790,6 @@ if __name__ == '__main__':
                         pass
 
     finally:
+        stop_vmstats_collector(vmstats_process, vmstats_log)
         logging.info('succ_num - ' + str(succ_num))
         logging.info('fail_num - ' + str(fail_num))
