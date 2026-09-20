@@ -29,9 +29,10 @@ def xctrace_environment():
 
 class iTraceThread(threading.Thread):
 
-    TRACE_TEMPLATE = 'Activity Monitor'
-    # xctrace 自身的安全上限保持默认 600s；实际短采集由 5s 定时器主动
-    # 发送 SIGINT 结束，避免依赖过短的 --time-limit 生成不完整文档。
+    # TRACE_TEMPLATE = 'Activity Monitor'
+    TRACE_TEMPLATE = 'UX-HitchAndMetal'
+
+    # xctrace 自身的安全上限保持默认 600s；实际短采集由 5s 定时器主动，发送 SIGINT 结束，避免依赖过短的 --time-limit 生成不完整文档。
     TRACE_TIME_LIMIT_SECONDS = 600
     TRACE_CAPTURE_SECONDS = 5
 
