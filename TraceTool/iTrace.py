@@ -3,14 +3,6 @@ import threading
 import time
 import logging
 
-logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
-# logging.getLogger('matplotlib.font_manager').disabled = True
-formatter = logging.Formatter('%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s')
-sh = logging.StreamHandler()
-sh.setFormatter(formatter)
-logger.addHandler(sh)
-
 
 class iTraceThread(threading.Thread):
 

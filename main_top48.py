@@ -4,7 +4,6 @@ import signal
 import shutil
 import subprocess
 import time
-import logging
 import openpyxl
 import pandas as pd
 
@@ -705,16 +704,12 @@ Basics = [Basic1, Basic2, Basic3, Basic4, Basic5]
 # 按装订区域中的绿色按钮以运行脚本。
 if __name__ == '__main__':
     # 启动内存采集脚本
-    import subprocess
     mem_script_path = os.path.join(os.path.dirname(__file__), 'mem', 'memcollct.sh')
     mem_process = subprocess.Popen(['bash', mem_script_path],
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE)
+                                   start_new_session=True)
     logging.info(f'Memory collection started with PID: {mem_process.pid}')
 
     result_dict = {'case_name':[],'success':[]}
-    vmstats_process = None
-    vmstats_log = None
     try:
         SeaOfStarsAW.init_device()
         SeaOfStarsAW.start_trace_thread()
@@ -756,3 +751,14 @@ if __name__ == '__main__':
     finally:
         logging.info('succ_num - ' + str(succ_num))
         logging.info('fail_num - ' + str(fail_num))
+        stop_result = subprocess.run(['bash', mem_script_path, 'stop'],
+                                     capture_output=True,
+                                     text=True)
+        if stop_result.returncode != 0:
+            logging.error('Failed to stop memory collection: %s', stop_result.stderr.strip())
+        try:
+            mem_process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            os.killpg(mem_process.pid, signal.SIGTERM)
+            mem_process.wait(timeout=5)
+        logging.info('Memory collection stopped')

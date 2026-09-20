@@ -1,13 +1,20 @@
+#!/bin/bash
+
 PASSWORD='alpine'
 IP='127.0.0.1'
 PORT='2222'
 USER='root'
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-sshpass -p "alpine" ssh -p $PORT $USER@$IP "mkdir tmp"
-sshpass -p "alpine" ssh -p $PORT $USER@$IP "mkdir tmp/log/"
+if [ "${1:-}" = "stop" ]; then
+    sshpass -p "${PASSWORD}" ssh -o StrictHostKeyChecking=no -p "${PORT}" "${USER}@${IP}" \
+        'if [ -f ~/tmp/run.pid ]; then kill "$(cat ~/tmp/run.pid)" 2>/dev/null || true; rm -f ~/tmp/run.pid; fi'
+    exit $?
+fi
 
-sshpass -p "alpine" scp -P $PORT "$(dirname "$0")/run.sh" $USER@$IP:~/tmp/
-sshpass -p "alpine" ssh -p $PORT $USER@$IP "chmod +x tmp/run.sh"
-sshpass -p "alpine" scp -P $PORT "$(dirname "$0")/print.sh" $USER@$IP:~/tmp/
-sshpass -p "alpine" ssh -p $PORT $USER@$IP "chmod +x tmp/print.sh"
-sshpass -p "alpine" ssh -p $PORT $USER@$IP "bash tmp/run.sh & bash tmp/print.sh &"
+sshpass -p "${PASSWORD}" ssh -o StrictHostKeyChecking=no -p "${PORT}" "${USER}@${IP}" "mkdir -p ~/tmp/log"
+sshpass -p "${PASSWORD}" scp -o StrictHostKeyChecking=no -P "${PORT}" "${SCRIPT_DIR}/run.sh" "${USER}@${IP}:~/tmp/"
+sshpass -p "${PASSWORD}" ssh -o StrictHostKeyChecking=no -p "${PORT}" "${USER}@${IP}" \
+    'if [ -f ~/tmp/run.pid ]; then kill "$(cat ~/tmp/run.pid)" 2>/dev/null || true; rm -f ~/tmp/run.pid; fi'
+
+exec sshpass -p "${PASSWORD}" ssh -o StrictHostKeyChecking=no -p "${PORT}" "${USER}@${IP}" "bash ~/tmp/run.sh"
