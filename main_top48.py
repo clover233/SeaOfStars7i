@@ -697,60 +697,25 @@ Basic5 = [
     PerformanceDynamic_weixin_0010,
 ]
 
-# Basics = [Basic1, Basic2, Basic3, Basic4, Basic5]
-Basic0 = [PerformanceDynamic_meituan_0010,PerformanceDynamic_meituan_0080,PerformanceDynamic_meituan_0090]
-Basics = [Basic0]
-
-# VMSTATS采集命令
-VMSTATS_COMMAND = """\
-while true; do
-  printf '[%s] ' "$(date '+%Y-%m-%d %H:%M:%S')"
-  curl -s "http://127.0.0.1:8100/wda/device/vmStats" | jq -c .
-  sleep 15
-done
-"""
+Basics = [Basic1, Basic2, Basic3, Basic4, Basic5]
 
 
-def start_vmstats_collector():
-    vmstats_log_path = os.path.join(Result_Dir_Path, 'vmstats.log')
-    vmstats_log = open(vmstats_log_path, 'a', encoding='utf-8')
-    try:
-        process = subprocess.Popen(
-            ['/bin/bash', '-c', VMSTATS_COMMAND],
-            stdout=vmstats_log,
-            start_new_session=True,
-        )
-    except Exception:
-        vmstats_log.close()
-        raise
-
-    logging.info('vmStats collection started: %s', vmstats_log_path)
-    return process, vmstats_log
-
-
-def stop_vmstats_collector(process, vmstats_log):
-    if process is not None and process.poll() is None:
-        try:
-            os.killpg(process.pid, signal.SIGTERM)
-            process.wait(timeout=5)
-        except ProcessLookupError:
-            pass
-        except subprocess.TimeoutExpired:
-            os.killpg(process.pid, signal.SIGKILL)
-            process.wait()
-
-    if vmstats_log is not None:
-        vmstats_log.close()
-    logging.info('vmStats collection stopped')
 
 
 # 按装订区域中的绿色按钮以运行脚本。
 if __name__ == '__main__':
+    # 启动内存采集脚本
+    import subprocess
+    mem_script_path = os.path.join(os.path.dirname(__file__), 'mem', 'memcollct.sh')
+    mem_process = subprocess.Popen(['bash', mem_script_path],
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE)
+    logging.info(f'Memory collection started with PID: {mem_process.pid}')
+
     result_dict = {'case_name':[],'success':[]}
     vmstats_process = None
     vmstats_log = None
     try:
-        vmstats_process, vmstats_log = start_vmstats_collector()
         SeaOfStarsAW.init_device()
         SeaOfStarsAW.start_trace_thread()
         for _ in range(1):
@@ -784,13 +749,10 @@ if __name__ == '__main__':
                         SeaOfStarsAW.stop_trace()
                     finally:
                         SeaOfStarsAW.ut_device.home()
-                        #SeaOfStarsAW.swipe_to_launcher()
-                        #SeaOfStarsAW.go_home()
                         df = pd.DataFrame(result_dict)
                         df.to_excel(os.path.join(Result_Dir_Path,'result.xlsx'), index=False)
                         pass
 
     finally:
-        stop_vmstats_collector(vmstats_process, vmstats_log)
         logging.info('succ_num - ' + str(succ_num))
         logging.info('fail_num - ' + str(fail_num))

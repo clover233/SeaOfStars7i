@@ -204,17 +204,63 @@ class SeaOfStarsAW:
         logging.info("侧滑返回")
         SeaOfStarsAW.ut_device.swipe(20, 1950, 550, 1950, duration=0.03)
         time.sleep(sleep_time)
+
     def go_home(sleep_time = 2):
+        # 返回主屏幕
+        logging.info("返回主屏幕")
+        SeaOfStarsAW.ut_device.home()
+        time.sleep(sleep_time)
 
-
-        Coordinates=SeaOfStarsAW.find_app_from_launcher('支付宝')
-        while str(Coordinates) == ('Point(x=0, y=0)'):
-            if SeaOfStarsAW.ut_device(label='不允许').exists:
-                SeaOfStarsAW.ut_device(label='不允许').click()
-            SeaOfStarsAW.ut_device.swipe_right()
-            Coordinates = SeaOfStarsAW.find_app_from_launcher('支付宝')
     def swipe_to_launcher(sleep_time = 2):
-        SeaOfStarsAW.ut_device.swipe(0.5,0.999,0.5,0.5)
+        # SeaOfStarsAW.ut_device.swipe(0.5,0.995,0.5,0.5)
+        logging.info("返回主屏幕")
+        SeaOfStarsAW.ut_device.home()
+        time.sleep(sleep_time)
+
+    def start_21apps(sleep_time = 2):
+        SeaOfStarsAW.ut_device.session().app_activate('cn.xuexi.qg')
+        time.sleep(2)
+        SeaOfStarsAW.ut_device.session().app_activate('com.laiwang.DingTalk')
+        time.sleep(2)
+        SeaOfStarsAW.ut_device.session().app_activate('com.baidu.map')
+        time.sleep(2)
+        SeaOfStarsAW.ut_device.session().app_activate('com.baidu.netdisk')
+        time.sleep(2)
+        SeaOfStarsAW.ut_device.session().app_activate('com.yy.kiwi')
+        time.sleep(2)
+        SeaOfStarsAW.ut_device.session().app_activate('com.yueyou.cyreader')
+        time.sleep(2)
+        SeaOfStarsAW.ut_device.session().app_activate('com.jiangjia.gif')
+        time.sleep(2)
+        SeaOfStarsAW.ut_device.session().app_activate('com.quark.browser')
+        time.sleep(2)
+        SeaOfStarsAW.ut_device.session().app_activate('com.ss.iphone.article.lite')
+        time.sleep(2)
+        SeaOfStarsAW.ut_device.session().app_activate('com.ss.iphone.article.Video')
+        time.sleep(2)
+        SeaOfStarsAW.ut_device.session().app_activate('com.ss.iphone.ugc.aweme.lite')
+        time.sleep(2)
+        SeaOfStarsAW.ut_device.session().app_activate('com.taobao.fleamarket')
+        time.sleep(2)
+        SeaOfStarsAW.ut_device.session().app_activate('com.tencent.mttlite')
+        time.sleep(2)
+        SeaOfStarsAW.ut_device.session().app_activate('com.tencent.QQMusic')
+        time.sleep(2)
+        SeaOfStarsAW.ut_device.session().app_activate('com.ucweb.iphone.lowversion')
+        time.sleep(2)
+        SeaOfStarsAW.ut_device.session().app_activate('com.xunmeng.pinduoduo')
+        time.sleep(2)
+        SeaOfStarsAW.ut_device.session().app_activate('com.youku.YouKu')
+        time.sleep(2)
+        SeaOfStarsAW.ut_device.session().app_activate('com.zhihu.ios')
+        time.sleep(2)
+        SeaOfStarsAW.ut_device.session().app_activate('com.miHoYo.Yuanshen')
+        time.sleep(20)
+        SeaOfStarsAW.ut_device.session().app_activate('com.tencent.ioshlddz')
+        time.sleep(10)
+        SeaOfStarsAW.ut_device.session().app_activate('com.tencent.lolm')
+        time.sleep(20)
+        SeaOfStarsAW.ut_device.home()
 
 
     def write_results_to_excel(filename, sheetname, error_message):
@@ -248,5 +294,4 @@ class ElementNotFoundError(Exception):
 
     def __str__(self):
         return self.errorInfo
-
 
