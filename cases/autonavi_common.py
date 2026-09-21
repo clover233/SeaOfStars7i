@@ -24,6 +24,8 @@ class AutonaviCase(Case):
         self.current_step = '准备环境'
         self._has_step = False
         self._trace_active = False
+        self._trace_iteration = 0
+        self._trace_step_number = None
 
     @property
     def device(self):
@@ -31,23 +33,33 @@ class AutonaviCase(Case):
 
     @contextmanager
     def capture_trace(self, iteration, step_number):
-        """只包围首尾单步；每轮固定生成两份短 trace。"""
-        if SeaOfStarsAW.trace_thread is None:
-            SeaOfStarsAW.start_trace_thread()
+        """记录当前轮次，并在显式上下文结束时收尾当前步骤。"""
+        self._trace_iteration = iteration
         if step_number == 1:
             self._has_step = False
         try:
-            SeaOfStarsAW.start_trace(
-                self.trace_dir_path,
-                self.__class__.__name__,
-                'round_{}_step_{}'.format(iteration + 1, step_number),
-                self.screenshot_dir_path,
-            )
-            self._trace_active = True
             yield
         finally:
-            self._trace_active = False
+            if self._trace_active and self._trace_step_number == step_number:
+                SeaOfStarsAW.stop_trace()
+                self._trace_active = False
+                self._trace_step_number = None
+
+    def _start_step_trace(self, step_number):
+        """为每个用例步骤单独生成一份 trace 日志。"""
+        if SeaOfStarsAW.trace_thread is None:
+            SeaOfStarsAW.start_trace_thread()
+        if self._trace_active:
             SeaOfStarsAW.stop_trace()
+        SeaOfStarsAW.start_trace(
+            self.trace_dir_path,
+            self.__class__.__name__,
+            'round_{}_step_{}'.format(
+                self._trace_iteration + 1, step_number),
+            self.screenshot_dir_path,
+        )
+        self._trace_active = True
+        self._trace_step_number = step_number
 
     @SeaOfStarsAW.function_log
     def set_up(self):
@@ -61,10 +73,10 @@ class AutonaviCase(Case):
         if self._has_step:
             time.sleep(self.STEP_INTERVAL)
         self._has_step = True
+        self._start_step_trace(number)
         self.current_step = '{}、{}'.format(number, text)
         logging.info(self.current_step)
-        if self._trace_active and SeaOfStarsAW.trace_thread is not None:
-            SeaOfStarsAW.trace_thread.add_log('高德地图', self.current_step)
+        SeaOfStarsAW.trace_thread.add_log('高德地图', self.current_step)
 
     def fail(self, message):
         path = os.path.join(

@@ -21,93 +21,48 @@ class PerformanceDynamic_fuzai(Case):
 
     @SeaOfStarsAW.function_log
     def run_case(self):
-        """
-        按顺序打开16个应用，每个应用停留3秒后返回桌面，保留后台负载。
-        仅采集天天象棋和地铁跑酷从启动到返回桌面的两段trace。
-        """
+        """按顺序打开16个应用，每个应用动作各采集一份 trace。"""
         logging.info("用例开始执行")
         if SeaOfStarsAW.ut_device.locked():
             SeaOfStarsAW.ut_device.unlock()
             time.sleep(3)
 
-        for test_time in range(0, self.TEST_TIME):
-            step = 0
-            try:
-                SeaOfStarsAW.start_trace(self.trace_dir_path, self.__class__.__name__, 'step_' + str(step),
-                                         self.screenshot_dir_path)
-                logging.info('1、起负载')
-                SeaOfStarsAW.trace_thread.add_log('负载', '起负载')
-                SeaOfStarsAW.ut_device.app_activate('com.tencent.qqchschess')
-                time.sleep(3)
-                SeaOfStarsAW.ut_device.home()
-
-            finally:
-                SeaOfStarsAW.stop_trace()
-
-            SeaOfStarsAW.ut_device.app_activate('com.zhanlang.swgd66')
-            time.sleep(3)
-            SeaOfStarsAW.ut_device.home()
-
-            SeaOfStarsAW.ut_device.app_activate('com.tuyoo.doudizhu.3d')
-            time.sleep(3)
-            SeaOfStarsAW.ut_device.home()
-
-            SeaOfStarsAW.ut_device.app_activate('com.7k7k.gouji')
-            time.sleep(3)
-            SeaOfStarsAW.ut_device.home()
-
-            SeaOfStarsAW.ut_device.app_activate('com.apple.Passbook')
-            time.sleep(3)
-            SeaOfStarsAW.ut_device.home()
-
-            SeaOfStarsAW.ut_device.app_activate('m.qidian.QDReaderAppStore')
-            time.sleep(3)
-            SeaOfStarsAW.ut_device.home()
-
-            SeaOfStarsAW.ut_device.app_activate('com.wang.CNRNewMediaApp')
-            time.sleep(3)
-            SeaOfStarsAW.ut_device.home()
-
-            SeaOfStarsAW.ut_device.app_activate('com.kugou.kugou1002')
-            time.sleep(3)
-            SeaOfStarsAW.ut_device.home()
-
-            SeaOfStarsAW.ut_device.app_activate('com.sina.sinanews')
-            time.sleep(3)
-            SeaOfStarsAW.ut_device.home()
-
-            SeaOfStarsAW.ut_device.app_activate('com.tencent.peng')
-            time.sleep(3)
-            SeaOfStarsAW.ut_device.home()
-
-            SeaOfStarsAW.ut_device.app_activate('ifengNews')
-            time.sleep(3)
-            SeaOfStarsAW.ut_device.home()
-
-            SeaOfStarsAW.ut_device.app_activate('com.sohu.newspaper')
-            time.sleep(3)
-            SeaOfStarsAW.ut_device.home()
-
-            SeaOfStarsAW.ut_device.app_activate('com.Qting.QTTour')
-            time.sleep(3)
-            SeaOfStarsAW.ut_device.home()
-
-            SeaOfStarsAW.ut_device.app_activate('com.yytingting.iting')
-            time.sleep(3)
-            SeaOfStarsAW.ut_device.home()
-
-            SeaOfStarsAW.ut_device.app_activate('yyvoice')
-            time.sleep(3)
-            SeaOfStarsAW.ut_device.home()
-
-            step = 1
-            try:
-                SeaOfStarsAW.start_trace(self.trace_dir_path, self.__class__.__name__, 'step_' + str(step),
-                                         self.screenshot_dir_path)
-                SeaOfStarsAW.trace_thread.add_log('负载', '地铁跑酷')
-                SeaOfStarsAW.ut_device.app_activate('com.kiloo.subwaysurf.cn')
-                time.sleep(3)
-                SeaOfStarsAW.ut_device.home()
-            finally:
-                SeaOfStarsAW.stop_trace()
+        app_packages = [
+            'com.tencent.qqchschess',
+            'com.zhanlang.swgd66',
+            'com.tuyoo.doudizhu.3d',
+            'com.7k7k.gouji',
+            'com.apple.Passbook',
+            'm.qidian.QDReaderAppStore',
+            'com.wang.CNRNewMediaApp',
+            'com.kugou.kugou1002',
+            'com.sina.sinanews',
+            'com.tencent.peng',
+            'ifengNews',
+            'com.sohu.newspaper',
+            'com.Qting.QTTour',
+            'com.yytingting.iting',
+            'yyvoice',
+            'com.kiloo.subwaysurf.cn',
+        ]
+        if SeaOfStarsAW.trace_thread is None:
+            SeaOfStarsAW.start_trace_thread()
+        for iteration in range(self.TEST_TIME):
+            for step_number, package in enumerate(app_packages, 1):
+                step_text = '{}、启动 {}'.format(step_number, package)
+                try:
+                    SeaOfStarsAW.start_trace(
+                        self.trace_dir_path,
+                        self.__class__.__name__,
+                        'round_{}_step_{}'.format(
+                            iteration + 1, step_number),
+                        self.screenshot_dir_path,
+                    )
+                    logging.info(step_text)
+                    SeaOfStarsAW.trace_thread.add_log('负载', step_text)
+                    SeaOfStarsAW.ut_device.app_activate(package)
+                    time.sleep(3)
+                    SeaOfStarsAW.ut_device.home()
+                finally:
+                    SeaOfStarsAW.stop_trace()
         logging.info('用例执行结束')
