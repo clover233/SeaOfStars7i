@@ -49,7 +49,6 @@ class iTraceThread(threading.Thread):
         return predicate()
 
     def run(self):
-        global start_time_stamp, capture_time
         logging.info("日志线程开始运行")
         while 1:
             tips_bool = False
@@ -62,7 +61,6 @@ class iTraceThread(threading.Thread):
                     os.remove(self.log_path)
                 # 记录开始时间
                 self.start_time = time.time()
-                start_time_stamp = time.strftime("%Y%m%d_%H%M%S", time.localtime())
                 self.realStartTrace = True
                 logging.info("日志采集已开始")
                 # 等待stop_trace被调用
@@ -74,7 +72,7 @@ class iTraceThread(threading.Thread):
                 except:
                     pass
                 # 重命名log文件
-                new_log_name = "{}-{}({}s).log".format(self.save_name, start_time_stamp, int(capture_time))
+                new_log_name = "{}({}s).log".format(self.save_name, int(capture_time))
                 new_log_path = os.path.join(self.save_dir, new_log_name)
                 if not os.path.exists(self.log_path):
                     logging.warning("重命名跳过，源文件不存在: {}".format(

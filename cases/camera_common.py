@@ -18,13 +18,31 @@ class CameraCase(WdaCase):
 
     def ensure_photo_mode(self):
         if self.find('PhotoCapture') is None:
-            self.tap('PhotoModeButton', wait=2)
+            if self.find('PhotoModeButton') is not None:
+                self.tap('PhotoModeButton', wait=2)
+            else:
+                size = self.device.window_size()
+                for _ in range(6):
+                    if self.find('PhotoCapture') is not None:
+                        break
+                    self.device.click(round(size.width * 0.63),
+                                      round(size.height * 0.795))
+                    time.sleep(1)
         if self.find('PhotoCapture') is None:
             self.fail('无法切换到拍照模式')
 
     def ensure_video_mode(self):
         if self.find('VideoCapture') is None:
-            self.tap('VideoModeButton', wait=2)
+            if self.find('VideoModeButton') is not None:
+                self.tap('VideoModeButton', wait=2)
+            else:
+                size = self.device.window_size()
+                for _ in range(6):
+                    if self.find('VideoCapture') is not None:
+                        break
+                    self.device.click(round(size.width * 0.37),
+                                      round(size.height * 0.795))
+                    time.sleep(1)
         if self.find('VideoCapture') is None:
             self.fail('无法切换到录像模式')
 
@@ -142,8 +160,18 @@ class CameraCase(WdaCase):
 
     def open_recent_media(self):
         self.tap('GoToCameraRoll', wait=3)
-        if self.find('PUOneUpBarButtonItemIdentifierDone') is None:
-            self.fail('未打开最近拍摄内容')
+        for _ in range(8):
+            nodes = self.nodes()
+            # iOS 新旧图库分别暴露“完成”或关闭控件；全屏预览可能
+            # 隐藏工具栏，此时相机快门消失也表示已经进入最近项目。
+            if (self.find('PUOneUpBarButtonItemIdentifierDone', 'BackButton',
+                          '完成', '关闭', '返回相机', nodes=nodes) is not None
+                    or (self.find('GoToCameraRoll', nodes=nodes) is None
+                        and self.find('PhotoCapture', 'VideoCapture',
+                                      nodes=nodes) is None)):
+                return
+            time.sleep(0.5)
+        self.fail('未打开最近拍摄内容')
 
     def swipe_media_left(self, count):
         for _ in range(count):
@@ -151,7 +179,20 @@ class CameraCase(WdaCase):
             time.sleep(0.5)
 
     def return_from_recent_media(self):
-        self.tap('PUOneUpBarButtonItemIdentifierDone', wait=2)
+        for _ in range(3):
+            if self.find('PhotoCapture', 'VideoCapture') is not None:
+                return
+            close = self.find('PUOneUpBarButtonItemIdentifierDone',
+                              'BackButton', '完成', '关闭', '返回相机',
+                              max_y=180)
+            if close is not None:
+                self.tap_node(close)
+            else:
+                # 视频播放时单击只显示隐藏的工具栏，第二次才会返回。
+                self.device.click(30, 70)
+            time.sleep(2)
+        if self.find('PhotoCapture', 'VideoCapture') is None:
+            self.fail('浏览最近拍摄内容后未返回相机')
 
     def open_photo_library(self):
         self.open_recent_media()
@@ -166,10 +207,27 @@ class CameraCase(WdaCase):
         time.sleep(3)
 
     def flip_camera(self):
-        self.tap('FlipButton', wait=2)
+        self.tap('FlipButton', 'FrontBackFacingCameraChooser', wait=2)
 
     def set_video_format(self, fps):
         self.ensure_video_mode()
+        if self.find('帧速率') is not None:
+            # iOS 17 相机直接点顶部“高清/帧速率”循环切换，当前值在
+            # 控件 value 中；无需打开 iOS 26 的视频格式菜单。
+            for _ in range(4):
+                nodes = self.nodes()
+                resolution = self.find('分辨率', nodes=nodes)
+                if resolution is not None and resolution.get('value') != '高清':
+                    self.tap_node(resolution)
+                    time.sleep(1)
+                    continue
+                rate = self.find('帧速率', nodes=nodes)
+                if rate is not None and str(fps) in rate.get('value', ''):
+                    return
+                if rate is not None:
+                    self.tap_node(rate)
+                    time.sleep(1)
+            self.fail('未设置为1080p{}fps'.format(fps))
         self.tap('VideoFrameRateButton', wait=1)
         self.tap('分辨率高清Button', wait=1)
         self.tap('帧速率{}Button'.format(fps), wait=1)
@@ -200,6 +258,9 @@ class CameraCase(WdaCase):
         self.device.swipe(round(size.width * 0.2), round(size.height * 0.45),
                           round(size.width * 0.8), round(size.height * 0.45), 0.3)
         time.sleep(2)
+        if self.find('PhotoCapture') is None and self.find('PhotoModeButton') is None:
+            self.ensure_photo_mode()
+            return
         # iOS 26 中录像右滑会经过“电影效果/慢动作”；继续遍历模式直到照片。
         for _ in range(5):
             if self.find('PhotoCapture') is not None:

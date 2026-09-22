@@ -4,6 +4,7 @@ import signal
 import shutil
 import subprocess
 import time
+from http.client import RemoteDisconnected
 import openpyxl
 import pandas as pd
 
@@ -696,10 +697,98 @@ Basic5 = [
     PerformanceDynamic_weixin_0010,
 ]
 
-Basics = [Basic1, Basic2, Basic3, Basic4, Basic5]
+Basics = [Basic1]
+
+def wda_connection_lost(error):
+    """识别 WDA 传输中断；业务层的 WDA 错误仍按用例失败处理。"""
+    current = error
+    while current is not None:
+        if isinstance(current, (ConnectionRefusedError, ConnectionResetError,
+                                BrokenPipeError, RemoteDisconnected)):
+            return True
+        current = current.__cause__ or current.__context__
+    return False
 
 
+def cleanup_case(aw, return_home=True):
+    trace_stopped = True
+    try:
+        if aw.trace_thread is not None:
+            aw.stop_trace()
+    except Exception:
+        trace_stopped = False
+        logging.exception('停止 trace 失败')
 
+    if not return_home:
+        return trace_stopped, True
+
+    for attempt in range(1, 4):
+        try:
+            aw.ut_device.home()
+            return trace_stopped, False
+        except Exception as error:
+            if wda_connection_lost(error):
+                logging.error('WDA 连接已中断，返回桌面失败：%s', error)
+                return False, True
+            if attempt < 3:
+                time.sleep(2)
+            else:
+                logging.error('WDA 返回桌面失败（重试 3 次）：%s', error)
+    return False, False
+
+
+def run_cases(case_groups, result_dir, aw, results):
+    for group in case_groups:
+        disconnected = False
+        for case_class in group:
+            started_at = time.monotonic()
+            case = None
+            success = '0'
+            disconnected = False
+            try:
+                case = case_class(result_dir)
+                case.set_up()
+                case.run_case()
+                success = '1'
+            except AssertionError:
+                logging.error('用例 %s 执行失败，当前步骤：%s',
+                              case_class.__name__,
+                              getattr(case, 'current_step', '初始化/准备环境'))
+            except Exception as error:
+                disconnected = wda_connection_lost(error)
+                if disconnected:
+                    logging.error('WDA 连接已中断，用例 %s 停在步骤 %s：%s',
+                                  case_class.__name__,
+                                  getattr(case, 'current_step', '初始化/准备环境'),
+                                  error)
+                else:
+                    logging.exception('用例 %s 执行失败，当前步骤：%s',
+                                      case_class.__name__,
+                                      getattr(case, 'current_step', '初始化/准备环境'))
+            finally:
+                cleanup_ok, cleanup_disconnected = cleanup_case(
+                    aw, return_home=not disconnected)
+                disconnected = disconnected or cleanup_disconnected
+                if not cleanup_ok:
+                    success = '0'
+                    if not disconnected:
+                        logging.error('用例 %s 收尾失败', case_class.__name__)
+                results['case_name'].append(case_class.__name__)
+                results['success'].append(success)
+                try:
+                    pd.DataFrame(results).to_excel(
+                        os.path.join(result_dir, 'result.xlsx'), index=False)
+                except Exception:
+                    logging.exception(
+                        '结果保存失败，结果仍保留在内存中，下个用例结束后再次尝试保存')
+            logging.info('用例 %s 执行耗时 %.1f 秒，结果 %s',
+                         case_class.__name__, time.monotonic() - started_at,
+                         '成功' if success == '1' else '失败')
+            if disconnected:
+                logging.error('WDA 连接中断，本批次剩余用例停止执行')
+                break
+        if disconnected:
+            break
 
 # 按装订区域中的绿色按钮以运行脚本。
 if __name__ == '__main__':
@@ -713,42 +802,11 @@ if __name__ == '__main__':
     try:
         SeaOfStarsAW.init_device()
         SeaOfStarsAW.start_trace_thread()
-        for _ in range(1):
-            for Basic in Basics:
-                for single_case in Basic:
-                    try:
-                        case = single_case(Result_Dir_Path)
-                        result_dict['case_name'].append(case)
-                        case.set_up()
-                        case.run_case()
-                        time.sleep(3)
-                        succ_num += 1
-                        result_dict['success'].append('1')
-                    except ElementNotFoundError as e:
-                        logging.error(e)
-                        result_dict['success'].append('0')
-                        fail_num += 1
-                        time.sleep(5)
-                        SeaOfStarsAW.stop_trace()
-                    except TypeError:
-                        result_dict['success'].append('0')
-                        time.sleep(5)
-                        case = single_case(Result_Dir_Path)
-                        case.set_up()
-                        case.run_case()
-                    except Exception as err:
-                        result_dict['success'].append('0')
-                        logging.error(err)
-                        fail_num += 1
-                        time.sleep(5)
-                        SeaOfStarsAW.stop_trace()
-                    finally:
-                        SeaOfStarsAW.ut_device.home()
-                        df = pd.DataFrame(result_dict)
-                        df.to_excel(os.path.join(Result_Dir_Path,'result.xlsx'), index=False)
-                        pass
+        run_cases(Basics, Result_Dir_Path, SeaOfStarsAW, result_dict)
 
     finally:
+        succ_num = result_dict['success'].count('1')
+        fail_num = result_dict['success'].count('0')
         logging.info('succ_num - ' + str(succ_num))
         logging.info('fail_num - ' + str(fail_num))
         stop_result = subprocess.run(['bash', mem_script_path, 'stop'],

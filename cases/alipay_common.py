@@ -48,8 +48,7 @@ class AlipayCase(Case):
             SeaOfStarsAW.stop_trace()
         SeaOfStarsAW.start_trace(
             self.trace_dir_path, self.__class__.__name__,
-            'round_{}_step_{}'.format(
-                self._trace_iteration + 1, step_number),
+            'step_{}'.format(step_number),
             self.screenshot_dir_path)
         self._trace_active = True
         self._trace_step_number = step_number

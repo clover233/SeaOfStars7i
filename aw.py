@@ -141,7 +141,8 @@ class SeaOfStarsAW:
     def start_trace(path, case_name, scene_name, screenshot_path):
         time_stamp = time.strftime('%H%M%S', time.localtime())
         SeaOfStarsAW.trace_thread.start_trace(path, "{}-{}-{}".format(case_name, scene_name, time_stamp))
-        SeaOfStarsAW.ut_device.screenshot(screenshot_path+'/'+case_name+scene_name+time_stamp+'.png')
+        SeaOfStarsAW.ut_device.screenshot(os.path.join(
+            screenshot_path, '{}_{}_{}.png'.format(case_name, scene_name, time_stamp)))
 
     @staticmethod
     def stop_trace():
@@ -294,4 +295,3 @@ class ElementNotFoundError(Exception):
 
     def __str__(self):
         return self.errorInfo
-

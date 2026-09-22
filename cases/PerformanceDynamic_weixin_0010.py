@@ -29,9 +29,8 @@ class PerformanceDynamic_weixin_0010(WeixinCase):
             self.long_press_current_media()
             self.step(8, '点击转发给朋友，进入转发视频界面')
             self.tap('转发给朋友', wait=3)
-            self.step(9, '点击测试账号，进入确认发送界面')
-            self.tap(self.TEST_ACCOUNT, contains=True, min_y=180, max_y=760,
-                     wait=2)
+            self.step(9, '点击测试，进入确认发送界面')
+            self.select_forward_recipient('测试')
             self.step(10, '点击发送，完成发送并进入查看视频界面')
             self.tap('发送', min_y=700, wait=3)
             self.step(11, '返回微信主界面')

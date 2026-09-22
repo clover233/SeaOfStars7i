@@ -54,8 +54,7 @@ class PerformanceDynamic_fuzai(Case):
                     SeaOfStarsAW.start_trace(
                         self.trace_dir_path,
                         self.__class__.__name__,
-                        'round_{}_step_{}'.format(
-                            iteration + 1, step_number),
+                        'step_{}'.format(step_number),
                         self.screenshot_dir_path,
                     )
                     logging.info(step_text)

@@ -22,7 +22,7 @@ function catzprint
 {
     time=$(date "+%Y-%m-%d %H:%M:%S")
     echo "${time}" >> "${LOG_DIR}/zprint_${1}"
-    /usr/bin/zprint >> "${LOG_DIR}/zprint_${1}"
+    /usr/bin/zprint -w -t >> "${LOG_DIR}/zprint_${1}"
 }
 
 function catvmstat
@@ -50,7 +50,7 @@ function catargs
         catsysctl "${i}"
         catzprint "${i}"
         catfootprint "${i}"
-        sleep 3
+        sleep 15
         i=$((i + 1))
     done
 }
