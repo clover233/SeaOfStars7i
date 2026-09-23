@@ -104,7 +104,7 @@ Excel表中黄色为需要注意的地方。
 | MOMO陌陌 | `com.wemomo.momoappdemo1` |
 | TapTap | `com.easyplay.taptap.now` |
 | 元宝 | `com.tencent.hunyuan.app.chat` |
-| 滴滴 | `com.xiaojukeji.didi` |
+| 滴滴出行 | `com.xiaojukeji.didi` |
 | 钉钉 | `com.laiwang.DingTalk` |
 
 ### 第 4 页（20 个）
@@ -166,4 +166,4 @@ Excel表中黄色为需要注意的地方。
 | 优酷 | `com.youku.YouKu` |
 | 知乎 | `com.zhihu.ios` |
 | 作业帮 | `com.baidu.homework` |
-update
+|          ||

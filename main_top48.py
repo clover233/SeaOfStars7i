@@ -695,7 +695,7 @@ Basic5 = [
     PerformanceDynamic_weixin_0010,
 ]
 
-Basics = [Basic2]
+Basics = [Basic3]
 
 WDA_STATUS_URL = 'http://127.0.0.1:8100/status'
 WDA_RECOVERY_TIMEOUT_SECONDS = 600
