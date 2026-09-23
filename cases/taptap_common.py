@@ -39,10 +39,17 @@ class TapTapCase(WdaCase):
         self.fail('未返回 TapTap 找游戏页')
 
     def search_game(self, text):
-        self.tap('搜索', min_y=760, wait=3)
-        if not self.matching_nodes('search.voice.input'):
+        # 当前找游戏页的搜索栏位于顶部，提示词会轮换，不提供固定名称。
+        self.device.click(0.35, 0.085)
+        time.sleep(3)
+        fields = [node for node in self.nodes()
+                  if node.tag in ('XCUIElementTypeTextField',
+                                  'XCUIElementTypeSearchField')
+                  and node.get('visible') == 'true'
+                  and float(node.get('y', 0)) < 150]
+        if not fields:
             self.fail('TapTap 搜索页未找到搜索框')
-        element = self.device(className='XCUIElementTypeSearchField')
+        element = self.device(className=fields[0].tag)
         try:
             element.clear_text()
         except Exception:
@@ -52,10 +59,16 @@ class TapTapCase(WdaCase):
 
     def open_first_result(self, text):
         self.tap(text, min_y=130, max_y=300, wait=7)
-        if self.find(text, min_y=120, max_y=230) is None:
+        if self.find('game_detail.root') is None:
             self.fail('未进入{}游戏详情'.format(text))
 
     def open_reviews(self):
+        score = self.find('点评', contains=True, max_y=230)
+        if score is not None:
+            self.tap_node(score)
+            time.sleep(4)
+            if self.find('玩家点评', contains=True) is not None:
+                return
         for _ in range(5):
             nodes = self.nodes()
             targets = [node for node in nodes
@@ -76,8 +89,15 @@ class TapTapCase(WdaCase):
         self.tap(name, min_y=760, wait=6)
 
     def open_my_games(self):
+        self.return_find_games()
         nodes = self.nodes()
         avatar = self.find('TapTap.Profile.CurrentUser.Avatar', nodes=nodes)
+        if avatar is None:
+            avatar = next((node for node in nodes
+                           if node.tag == 'XCUIElementTypeButton'
+                           and node.get('visible') == 'true'
+                           and float(node.get('x', 0)) >= 350
+                           and 40 <= float(node.get('y', 0)) <= 110), None)
         if avatar is None:
             self.fail('当前页面未找到 TapTap 个人头像入口')
         self.tap_node(avatar)

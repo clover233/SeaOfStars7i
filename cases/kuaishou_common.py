@@ -80,20 +80,27 @@ class KuaishouCase(WdaCase):
         nodes = self.nodes() if nodes is None else nodes
         return self.find('kFeatureCoverViewAccessId', nodes=nodes) is not None
 
+    def _featured_controls_ready(self, nodes):
+        return (self._is_featured_feed(nodes)
+                and self.find('home_bottom_tab_id_thanos', nodes=nodes) is not None
+                and self.find('分享至', '分享给朋友', contains=True,
+                              nodes=nodes) is None)
+
     def normalize_featured_after_launch(self):
-        """关闭不可访问的未成年人模式提示，并统一到精选视频流。"""
-        nodes = self.nodes()
-        if self._is_featured_feed(nodes):
-            # 该提示未出现在 WDA 树中；按钮坐标由当前真机版本核对。
-            self.device.click(200, 790)
-            time.sleep(2)
+        """关闭启动弹窗并进入精选视频流。"""
         self.return_featured()
 
     def return_featured(self):
         for _ in range(10):
             nodes = self.nodes()
-            if self._is_featured_feed(nodes):
+            if self._featured_controls_ready(nodes):
                 return
+            panel_close = self.find('default panel close compact',
+                                    '取消', '关闭', nodes=nodes)
+            if panel_close is not None:
+                self.tap_node(panel_close)
+                time.sleep(2)
+                continue
             back = self.find(
                 'common nav back black', 'user_profile_go_back_button',
                 nodes=nodes)
@@ -105,9 +112,15 @@ class KuaishouCase(WdaCase):
         self.fail('多次返回后仍未到达快手精选页面')
 
     def swipe_to_next_video(self, watch_seconds=10):
-        self.device.swipe(0.5, 0.75, 0.5, 0.25, 0.3)
-        time.sleep(watch_seconds)
-        self.wait_for('COMMENT', timeout=10)
+        self.return_featured()
+        for attempt in range(2):
+            self.device.swipe(0.5, 0.75, 0.5, 0.25, 0.3)
+            time.sleep(watch_seconds)
+            nodes = self.nodes()
+            if self._featured_controls_ready(nodes):
+                return
+            self.return_featured()
+        self.fail('切换视频后未回到快手精选页面')
 
     def open_comments(self):
         self.tap('COMMENT', wait=4)

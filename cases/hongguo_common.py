@@ -111,11 +111,36 @@ class HongguoCase(WdaCase):
     def open_theatre(self):
         self.tap('剧场', min_y=760, wait=4)
         self._dismiss_optional_prompts()
-        self.wait_for('排行榜', max_y=230, timeout=10)
+        self.wait_for('找剧', max_y=230, timeout=10)
 
     def open_ranking(self):
-        self.tap('排行榜', max_y=230, wait=4)
-        self.wait_for('推荐榜', max_y=300, timeout=10)
+        # 排行榜快捷入口随找剧页滚动而隐藏；榜单标签也可进入同一页面。
+        entry = None
+        for attempt in range(3):
+            nodes = self.nodes()
+            entry = self.find('排行榜', max_y=230, nodes=nodes)
+            if entry is None:
+                entry = next((node for node in nodes
+                              if node.get('visible') == 'true'
+                              and '榜 No.' in self.node_name(node)
+                              and 250 <= float(node.get('y', 0)) <= 800), None)
+            if entry is not None:
+                break
+            if attempt < 2:
+                self.device.swipe(201, 300, 201, 650, 0.3)
+                time.sleep(1)
+        if entry is None:
+            self.fail('找剧页未找到剧集榜单入口')
+        self.tap_node(entry)
+        time.sleep(3)
+        # 从收藏榜等入口进入时，推荐榜可能位于横向标签栏左侧。
+        for _ in range(3):
+            if self.find('推荐榜', max_y=300) is not None:
+                break
+            self.device.swipe(60, 240, 360, 240, 0.4)
+            time.sleep(1)
+        self.tap('推荐榜', max_y=300, wait=3)
+        self.wait_for('热播榜', max_y=300, timeout=10)
 
     def open_first_ranking_card(self):
         nodes = self.nodes()
@@ -166,7 +191,23 @@ class HongguoCase(WdaCase):
         self.tap('2x', '2.0x', wait=3)
 
     def open_comments(self):
-        self.tap('short_video_comment_icon', wait=3)
+        nodes = self.nodes()
+        comment = self.find('short_video_comment_icon', nodes=nodes)
+        if comment is None:
+            # 新版只给右侧点赞、评论、分享计数按钮设置了数字名称。
+            # 评论为右侧纵向按钮组的第二个计数按钮。
+            counters = [node for node in nodes
+                        if node.tag == 'XCUIElementTypeButton'
+                        and node.get('visible') == 'true'
+                        and float(node.get('x', 0)) >= 370
+                        and 450 <= float(node.get('y', 0)) <= 730
+                        and any(char.isdigit() for char in self.node_name(node))]
+            counters.sort(key=lambda node: float(node.get('y', 0)))
+            if len(counters) < 3:
+                self.fail('首页未找到右侧评论按钮')
+            comment = counters[1]
+        self.tap_node(comment)
+        time.sleep(3)
         self.wait_for('community short video close', timeout=8)
 
     def close_comments_by_edge(self):
@@ -180,9 +221,31 @@ class HongguoCase(WdaCase):
             logging.info('当前短剧已在追剧列表，无需反向取消')
             return
         star = self.find('short_video_star_icon_663', nodes=nodes)
-        if star is None:
-            self.fail('未找到追剧按钮')
-        self.tap_node(star)
+        if star is not None:
+            self.tap_node(star)
+        else:
+            # 新版星形图标不在 WDA 树中，只有右侧的追剧计数按钮。
+            counters = [node for node in nodes
+                        if node.tag == 'XCUIElementTypeButton'
+                        and node.get('visible') == 'true'
+                        and float(node.get('x', 0)) >= 370
+                        and 450 <= float(node.get('y', 0)) <= 730
+                        and any(char.isdigit() for char in self.node_name(node))]
+            counters.sort(key=lambda node: float(node.get('y', 0)))
+            if len(counters) < 3:
+                self.fail('首页未找到右侧追剧按钮')
+            first = counters[0]
+            x = round(float(first.get('x', 0)) + float(first.get('width', 0)) / 2)
+            y = round(float(first.get('y', 0)) + 20)
+            screenshot = self.device.screenshot()
+            size = self.device.window_size()
+            r, g, b = screenshot.convert('RGB').getpixel((
+                round(x * screenshot.width / size.width),
+                round(y * screenshot.height / size.height)))
+            if r > 200 and 100 < g < 230 and b < 130:
+                logging.info('当前短剧已在追剧列表，无需反向取消')
+                return
+            self.tap_node(first)
         time.sleep(2)
 
     def leave_player_to_feed(self):

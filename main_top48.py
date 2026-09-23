@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import signal
@@ -5,6 +6,7 @@ import shutil
 import subprocess
 import time
 from http.client import RemoteDisconnected
+from urllib.request import urlopen
 import openpyxl
 import pandas as pd
 
@@ -15,7 +17,6 @@ from aw import ElementNotFoundError
 
 from cases.PerformanceDynamic_alipay_0010 import PerformanceDynamic_alipay_0010
 from cases.PerformanceDynamic_alipay_0020 import PerformanceDynamic_alipay_0020
-from cases.PerformanceDynamic_alipay_0030 import PerformanceDynamic_alipay_0030
 from cases.PerformanceDynamic_alipay_0070 import PerformanceDynamic_alipay_0070
 from cases.PerformanceDynamic_autonavi_0010 import PerformanceDynamic_autonavi_0010
 from cases.PerformanceDynamic_autonavi_0030 import PerformanceDynamic_autonavi_0030
@@ -34,7 +35,6 @@ from cases.PerformanceDynamic_call_0010 import PerformanceDynamic_call_0010
 from cases.PerformanceDynamic_call_0020 import PerformanceDynamic_call_0020
 from cases.PerformanceDynamic_camera_0020 import PerformanceDynamic_camera_0020
 from cases.PerformanceDynamic_camera_0030 import PerformanceDynamic_camera_0030
-
 from cases.PerformanceDynamic_douyin_0010 import PerformanceDynamic_douyin_0010
 from cases.PerformanceDynamic_douyin_0030 import PerformanceDynamic_douyin_0030
 from cases.PerformanceDynamic_douyin_0040 import PerformanceDynamic_douyin_0040
@@ -48,12 +48,10 @@ from cases.PerformanceDynamic_jrtt_0020 import PerformanceDynamic_jrtt_0020
 from cases.PerformanceDynamic_kuaishou_0010 import PerformanceDynamic_kuaishou_0010
 from cases.PerformanceDynamic_kuaishou_0020 import PerformanceDynamic_kuaishou_0020
 from cases.PerformanceDynamic_meituan_0010 import PerformanceDynamic_meituan_0010
-
 from cases.PerformanceDynamic_pinduoduo_0010 import PerformanceDynamic_pinduoduo_0010
 from cases.PerformanceDynamic_qimao_0010 import PerformanceDynamic_qimao_0010
 from cases.PerformanceDynamic_qimao_0020 import PerformanceDynamic_qimao_0020
 from cases.PerformanceDynamic_qiyi_0030 import PerformanceDynamic_qiyi_0030
-
 from cases.PerformanceDynamic_weibo_0020 import PerformanceDynamic_weibo_0020
 from cases.PerformanceDynamic_weibo_0030 import PerformanceDynamic_weibo_0030
 from cases.PerformanceDynamic_weibo_0040 import PerformanceDynamic_weibo_0040
@@ -697,7 +695,44 @@ Basic5 = [
     PerformanceDynamic_weixin_0010,
 ]
 
-Basics = [Basic1]
+Basics = [Basic2]
+
+WDA_STATUS_URL = 'http://127.0.0.1:8100/status'
+WDA_RECOVERY_TIMEOUT_SECONDS = 600
+WDA_RECOVERY_POLL_SECONDS = 3
+
+
+def wda_ready():
+    """与 supervisor 使用相同的 /status 就绪条件。"""
+    try:
+        with urlopen(WDA_STATUS_URL, timeout=3) as response:
+            if response.status != 200:
+                return False
+            status = json.load(response)
+            value = status.get('value') if isinstance(status, dict) else None
+            return isinstance(value, dict) and value.get('ready') is True
+    except (OSError, ValueError, TypeError):
+        return False
+
+
+def wait_for_wda_recovery(aw, timeout=WDA_RECOVERY_TIMEOUT_SECONDS):
+    """等待 supervisor 重建 WDA，并确认新设备连接可以返回桌面。"""
+    logging.warning('等待 WDA 恢复，最长 %s 秒', timeout)
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if wda_ready():
+            try:
+                aw.init_device()
+                aw.ut_device.home()
+            except Exception as error:
+                logging.warning('WDA 状态已就绪，但设备操作仍失败：%s', error)
+            else:
+                logging.info('WDA 已恢复，继续执行后续用例')
+                return True
+        time.sleep(min(WDA_RECOVERY_POLL_SECONDS,
+                       max(0, deadline - time.monotonic())))
+    logging.error('等待 WDA 恢复超过 %s 秒，本批次剩余用例停止执行', timeout)
+    return False
 
 def wda_connection_lost(error):
     """识别 WDA 传输中断；业务层的 WDA 错误仍按用例失败处理。"""
@@ -739,7 +774,6 @@ def cleanup_case(aw, return_home=True):
 
 def run_cases(case_groups, result_dir, aw, results):
     for group in case_groups:
-        disconnected = False
         for case_class in group:
             started_at = time.monotonic()
             case = None
@@ -784,11 +818,8 @@ def run_cases(case_groups, result_dir, aw, results):
             logging.info('用例 %s 执行耗时 %.1f 秒，结果 %s',
                          case_class.__name__, time.monotonic() - started_at,
                          '成功' if success == '1' else '失败')
-            if disconnected:
-                logging.error('WDA 连接中断，本批次剩余用例停止执行')
-                break
-        if disconnected:
-            break
+            if disconnected and not wait_for_wda_recovery(aw):
+                return
 
 # 按装订区域中的绿色按钮以运行脚本。
 if __name__ == '__main__':
