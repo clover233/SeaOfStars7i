@@ -32,10 +32,12 @@ class KuaishouCase(WdaCase):
                 'waitForIdleTimeout': current.get('waitForIdleTimeout', 10),
                 'animationCoolOffTimeout': current.get(
                     'animationCoolOffTimeout', 2),
+                'accessibilityDeadline': current.get('accessibilityDeadline', 0),
             }
             self.device.appium_settings({
                 'waitForIdleTimeout': 0,
                 'animationCoolOffTimeout': 0,
+                'accessibilityDeadline': 5,
             })
         except Exception:
             logging.exception('WDA 不支持 idle 等待设置，继续使用默认配置')
@@ -52,6 +54,7 @@ class KuaishouCase(WdaCase):
 
     def prepare_iteration(self):
         self._enable_continuous_ui_mode()
+        self._screen_size = self.device.window_size()
         try:
             self.device.app_terminate(self.PACKAGE)
         except Exception:
@@ -95,6 +98,14 @@ class KuaishouCase(WdaCase):
             nodes = self.nodes()
             if self._featured_controls_ready(nodes):
                 return
+            share_title = self.find('分享给朋友', '分享至', nodes=nodes)
+            if share_title is not None:
+                # 长按菜单的“关闭”是弹幕选项；点击标题上方的遮罩收起。
+                size = self.device.window_size()
+                self.device.click(round(size.width / 2),
+                                  round(max(140, float(share_title.get('y', 0)) - 50)))
+                time.sleep(2)
+                continue
             panel_close = self.find('default panel close compact',
                                     '取消', '关闭', nodes=nodes)
             if panel_close is not None:
@@ -113,14 +124,11 @@ class KuaishouCase(WdaCase):
 
     def swipe_to_next_video(self, watch_seconds=10):
         self.return_featured()
-        for attempt in range(2):
-            self.device.swipe(0.5, 0.75, 0.5, 0.25, 0.3)
-            time.sleep(watch_seconds)
-            nodes = self.nodes()
-            if self._featured_controls_ready(nodes):
-                return
-            self.return_featured()
-        self.fail('切换视频后未回到快手精选页面')
+        self.device.swipe(0.5, 0.75, 0.5, 0.25, 0.3)
+        time.sleep(watch_seconds)
+        # 动画结束时第一份 source 偶尔还未暴露底栏；返回检查会等待
+        # 控件稳定。该检查成功后即已回到精选页，不再无条件报失败。
+        self.return_featured()
 
     def open_comments(self):
         self.tap('COMMENT', wait=4)
@@ -128,7 +136,12 @@ class KuaishouCase(WdaCase):
 
     def browse_comments_and_close(self):
         self.browse(up=2, down=2)
-        self.tap('关闭评论区', wait=4)
+        close = self.find('关闭评论区')
+        if close is not None:
+            self.tap_node(close)
+            time.sleep(4)
+        # 评论面板到顶后下拉也可能直接关闭，先确认视频页再继续。
+        self.return_featured()
         self.wait_for('COMMENT', timeout=10)
 
     def like_current_video(self):
@@ -184,14 +197,23 @@ class KuaishouCase(WdaCase):
         time.sleep(seconds)
 
     def exit_live_and_return_featured(self):
-        # 直播画布没有可访问的退出控件。
-        self.device.click(371, 70)
+        size = self._screen_size
+        # 430x932 实机：旧 (371,70) 点到了观众头像；退出 X 在屏幕最右侧。
+        nodes = self.nodes()
+        if self.find('观众榜单前10可获得专属勋章', nodes=nodes) is not None:
+            self.device.click(round(size.width * 0.5), round(size.height * 0.3))
+            time.sleep(2)
+        self.device.click(round(size.width * 0.948), round(size.height * 0.079))
         time.sleep(4)
         nodes = self.nodes()
         if self.find('看了这么久，留个关注再走吧！', nodes=nodes) is not None:
-            # 退出确认中的“退出直播间”。
-            self.device.click(200, 525)
-            time.sleep(6)
+            exit_button = self.find('退出直播间', '退出', nodes=nodes)
+            if exit_button is not None:
+                self.tap_node(exit_button)
+            else:
+                self.device.click(round(size.width * 200 / 402),
+                                  round(size.height * 525 / 874))
+            time.sleep(4)
         self.return_featured()
 
     def open_sidebar(self):
@@ -201,28 +223,33 @@ class KuaishouCase(WdaCase):
     def open_shop(self):
         self.tap('快手小店', wait=8)
         nodes = self.nodes()
-        if self.find('我的订单', nodes=nodes) is None:
-            # 首次专属优惠弹窗只绘制在画布上，关闭按钮坐标经 WEditor 核对。
-            self.device.click(360, 150)
-            time.sleep(5)
+        if self.find('kwaishop-pub-dapaidabu-h5', nodes=nodes) is not None:
+            # 2026-09-28：大牌大补为从底部弹出的活动页，点击上方遮罩关闭。
+            size = self._screen_size
+            self.device.click(round(size.width * 0.5), round(size.height * 0.16))
+            time.sleep(3)
         self.wait_for('我的订单', timeout=15)
 
     def open_first_shop_product(self):
+        size = self.device.window_size()
         candidates = []
         for node in self.nodes():
             name = self.node_name(node)
             x, y, width, height = (float(node.get(key, 0))
                                    for key in ('x', 'y', 'width', 'height'))
             if (node.get('visible') == 'true' and len(name) >= 12
-                    and 0 <= x <= 30 and 260 <= y <= 720
-                    and 150 <= width <= 200 and 12 <= height <= 30):
+                    and 0 <= x <= size.width * 0.1
+                    and size.height * 0.29 <= y <= size.height * 0.83
+                    and size.width * 0.35 <= width <= size.width * 0.5
+                    and 12 <= height <= 60):
                 candidates.append(node)
         if not candidates:
             self.fail('快手小店推荐页未找到第一个商品')
         self.tap_node(sorted(candidates, key=lambda node: float(
             node.get('y', 0)))[0])
-        time.sleep(7)
-        self.wait_for('merchant_transaction_back_transparent', timeout=15)
+        # 商品已打开时新版返回按钮可能无名称，以底部交易入口判断详情页。
+        self.wait_for('立即购买', '加入购物车', '加入购物袋',
+                      min_y=size.height * 0.75, contains=True, timeout=15)
 
     def open_add_to_bag(self):
         candidates = []
@@ -240,9 +267,11 @@ class KuaishouCase(WdaCase):
             self.tap_node(candidates[0])
         else:
             logging.warning('加入购物袋未暴露节点，使用 weditor 核对坐标')
-            self.device.click(160, 818)
+            size = self.device.window_size()
+            self.device.click(round(size.width * 160 / 402),
+                              round(size.height * 818 / 874))
         time.sleep(5)
-        self.wait_for('加入购物车', contains=True, timeout=12)
+        self.wait_for('加入购物车', '请选择规格', contains=True, timeout=12)
 
     def return_main_from_shop(self):
         nodes = self.nodes()

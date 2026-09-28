@@ -27,9 +27,11 @@ class JingdongCase(WdaCase):
             self._previous_idle_settings = {
                 'waitForIdleTimeout': current.get('waitForIdleTimeout', 10),
                 'animationCoolOffTimeout': current.get('animationCoolOffTimeout', 2),
+                'accessibilityDeadline': current.get('accessibilityDeadline', 0),
             }
             self.device.appium_settings(
-                {'waitForIdleTimeout': 0, 'animationCoolOffTimeout': 0})
+                {'waitForIdleTimeout': 0, 'animationCoolOffTimeout': 0,
+                 'accessibilityDeadline': 5})
         except Exception:
             logging.exception('设置 WDA 连续页面模式失败')
 
@@ -59,6 +61,12 @@ class JingdongCase(WdaCase):
     def dismiss_optional_prompts(self):
         for _ in range(5):
             nodes = self.nodes()
+            if self.find('粉丝关注任务', '关注并领取', nodes=nodes) is not None:
+                # 2026-09-28 430x932：新人红包浮层底部无名圆形关闭。
+                size = self.device.window_size()
+                self.device.click(round(size.width * 0.5), round(size.height * 0.75))
+                time.sleep(2)
+                continue
             if self.find('领取并使用', nodes=nodes) is not None:
                 self.device.click(201, 605)  # 直播券浮层的无名关闭按钮
                 time.sleep(2)
@@ -72,7 +80,7 @@ class JingdongCase(WdaCase):
 
     def fail_if_security_verification(self):
         nodes = self.nodes()
-        if (self.find('安全验证', nodes=nodes) is not None or
+        if (self.find('安全验证', '京东验证', '快速验证', nodes=nodes) is not None or
                 self.find('请按照图中轨迹绘制', contains=True,
                           nodes=nodes) is not None):
             self.fail('触发京东安全验证，请先人工完成验证再运行')
@@ -226,29 +234,40 @@ class JingdongCase(WdaCase):
                  fallback=(334, 810), wait=5)
 
     def open_live_list(self):
+        # “逛”现在默认落在持续播放的视频页；先缓存尺寸，避免在这里取 source。
+        size = self.device.window_size()
         self.bottom_tab('逛')
-        self.tap('直播', max_y=180, fallback=(315, 105), wait=6)
+        # 2026-09-28 实机截图：直播位于顶部左侧，旧 (315,105) 已变为视频栏目。
+        self.tap_viewport(round(size.width * 0.325), round(size.height * 0.085))
+        time.sleep(6)
+        self.fail_if_security_verification()
 
     def open_first_live(self):
-        self.device.click(100, 400)
+        size = self.device.window_size()
+        self.device.click(round(size.width * 100 / 402),
+                          round(size.height * 400 / 874))
         time.sleep(7)
         self.dismiss_optional_prompts()
+        self.fail_if_security_verification()
 
     def focus_live_comment(self):
         for _ in range(3):
             self.dismiss_optional_prompts()
-            chat = self.find('聊天框', '说点什么', contains=True)
+            self.fail_if_security_verification()
+            chat = self.find('聊天框', '说点什么', '说点什么吧', contains=True)
             if chat is not None:
                 self.tap_node(chat)
             else:
-                self.device.click(130, 811)
+                size = self.device.window_size()
+                self.device.click(round(size.width * 0.32),
+                                  round(size.height * 0.928))
             time.sleep(2)
             fields = [n for n in self.nodes()
                       if n.tag in ('XCUIElementTypeTextField', 'XCUIElementTypeTextView')
                       and n.get('visible') == 'true']
             if fields:
                 return
-        self.fail('直播聊天框被活动浮层遮挡')
+        self.fail('点击直播底部聊天框后未进入输入状态，请检查直播间或登录状态')
 
     def send_live_comment(self, text):
         self.enter_text(text)

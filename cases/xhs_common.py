@@ -47,6 +47,7 @@ class XhsCase(WdaCase):
 
     def prepare_iteration(self):
         self._enable_continuous_ui_mode()
+        self._screen_size = self.device.window_size()
         try:
             self.device.app_terminate(self.PACKAGE)
         except Exception:
@@ -166,7 +167,13 @@ class XhsCase(WdaCase):
         self.tap('评论', min_y=700, wait=4)
 
     def edge_back(self, wait=3):
-        self.device.swipe(0.01, 0.5, 0.90, 0.5, 0.3)
+        back = self.find('返回', max_y=150)
+        if back is not None:
+            self.tap_node(back)
+        else:
+            size = self._screen_size
+            self.device.swipe(4, round(size.height * 0.5),
+                              round(size.width * 0.9), round(size.height * 0.5), 0.3)
         time.sleep(wait)
 
     def return_profile(self):
@@ -219,14 +226,47 @@ class XhsCase(WdaCase):
         time.sleep(1)
 
     def open_search(self):
-        # 当前版本首页搜索按钮没有 accessibility name。
-        self.device.click(376, 82)
-        time.sleep(4)
-        if self.find('recommend_search_button', '搜索', max_y=130) is None:
-            self.fail('未进入小红书搜索页')
+        nodes = self.nodes()
+        size = self.device.window_size()
+        search = self.find('搜索', max_y=130, nodes=nodes)
+        if search is None:
+            # 2026-09-28：右上角无名 Button 的 rect 为 (380,59,44,45)。
+            search = next((n for n in nodes if n.get('visible') == 'true'
+                           and n.tag == 'XCUIElementTypeButton'
+                           and float(n.get('x', 0)) > size.width * 0.85
+                           and 45 <= float(n.get('y', 0)) <= 110
+                           and 20 <= float(n.get('width', 0)) <= 60), None)
+        if search is None:
+            self.fail('首页未找到右上角搜索按钮')
+        self.tap_node(search)
+        deadline = time.monotonic() + 10
+        while time.monotonic() < deadline:
+            nodes = self.nodes()
+            if (self.find('recommend_search_button', '搜索', max_y=130, nodes=nodes) is not None
+                    or any(n.get('visible') == 'true' and n.tag == 'XCUIElementTypeTextField'
+                           and float(n.get('y', 0)) < 150 for n in nodes)):
+                return
+            time.sleep(0.5)
+        self.fail('点击右上角搜索后未进入搜索页')
 
     def set_search_text(self, keyword):
-        self.enter_text(keyword, clear=True)
+        nodes = self.nodes()
+        field = next((n for n in nodes if n.get('visible') == 'true'
+                      and n.tag in ('XCUIElementTypeTextField', 'XCUIElementTypeTextView')
+                      and float(n.get('y', 0)) < 150), None)
+        if field is None:
+            self.fail('搜索页未找到输入框')
+        # 返回后搜索词会保留；同词重复搜索直接提交，避免清空已重建的 TextView。
+        if field.get('value') == keyword:
+            return
+        self.tap_node(field)
+        time.sleep(1)
+        element = self.device(type=field.tag, visible=True)
+        if field.get('value'):
+            element.clear_text()
+        # 输入后页面会重建输入节点，使用焦点输入避免沿用旧 element id。
+        self.device.send_keys(keyword)
+        time.sleep(1)
 
     def submit_search(self):
         self.tap('recommend_search_button', '搜索', max_y=130,

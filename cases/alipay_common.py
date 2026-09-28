@@ -114,6 +114,8 @@ class AlipayCase(Case):
         deadline = time.monotonic() + timeout
         while True:
             nodes = self.nodes()
+            if self.dismiss_navigation_overlays(nodes):
+                continue
             self.require_no_alert(nodes)
             node = self.find(*names, nodes=nodes)
             if node is not None:
@@ -167,7 +169,23 @@ class AlipayCase(Case):
                 return
         self.fail('未定位到推荐产品卡片，请使用 weditor 核对当前产品布局')
 
+    def _enable_continuous_ui_mode(self):
+        current = self.device.appium_settings()
+        self._previous_idle_settings = {
+            'waitForIdleTimeout': current.get('waitForIdleTimeout', 10),
+            'animationCoolOffTimeout': current.get('animationCoolOffTimeout', 2),
+        }
+        self.device.appium_settings({'waitForIdleTimeout': 0,
+                                    'animationCoolOffTimeout': 0})
+
+    def _restore_idle_settings(self):
+        previous = getattr(self, '_previous_idle_settings', None)
+        if previous is not None:
+            self.device.appium_settings(previous)
+            self._previous_idle_settings = None
+
     def start_alipay(self):
+        self._enable_continuous_ui_mode()
         if self.device.locked():
             self.device.unlock()
             time.sleep(2)
@@ -176,18 +194,57 @@ class AlipayCase(Case):
         self.dismiss_popup()
         self.return_tab('首页')
 
+    def dismiss_navigation_overlays(self, nodes=None):
+        nodes = self.nodes() if nodes is None else nodes
+        alerts = [n for n in nodes if n.tag.endswith('Alert')
+                  and n.get('visible') == 'true']
+        if alerts:
+            # 出行页可能延迟弹出蓝牙授权；浏览用例无需蓝牙。
+            deny = self.find('不允许', '不允许粘贴', nodes=list(alerts[0].iter()))
+            if deny is not None:
+                self.tap_node(deny)
+                time.sleep(1)
+                return True
+            self.require_no_alert(nodes)
+        if self.find('开心收下', nodes=nodes) is not None:
+            # 2026-09-23 失败截图：团购红包遮住转账入口，底部圆形关闭。
+            self.device.click(0.5, 0.714)
+            time.sleep(1)
+            return True
+        if self.find('一起开始', nodes=nodes) is not None:
+            close = self.find('关闭', '关闭按钮', nodes=nodes)
+            if close is not None:
+                self.tap_node(close)
+            else:
+                # 阿宝引导的右上角关闭，不开通资产服务。
+                self.device.click(0.918, 0.083)
+            time.sleep(1)
+            return True
+        return False
+
     def back(self):
-        # 网页返回按钮经常不在 WDA 控件树中，优先命名按钮，否则侧滑。
-        node = self.find('返回', '返回上一页', '返回按钮', '取消', '关闭当前小程序', '返回首页')
+        nodes = self.nodes()
+        if self.dismiss_navigation_overlays(nodes):
+            return
+        # 优先顶栏返回，避免点击正文中的“返回首页”等推荐入口。
+        names = ('返回', '返回上一页', '返回按钮', '取消',
+                 '关闭当前小程序', '返回首页')
+        node = next((n for n in nodes if n.get('visible') == 'true'
+                     and n.get('enabled') != 'false'
+                     and float(n.get('y', 0)) < 150
+                     and (n.get('name') in names or n.get('label') in names)), None)
         if node is not None:
             self.tap_node(node)
         else:
-            self.device.swipe(0.01, 0.5, 0.85, 0.5, 0.3)
+            # 出行/转账 H5 顶栏返回箭头未暴露名称；侧滑会误触页面浮层。
+            self.device.click(0.055, 0.083)
         time.sleep(2)
 
     def return_tab(self, name):
         for _ in range(7):
             nodes = self.nodes()
+            if self.dismiss_navigation_overlays(nodes):
+                continue
             tabbar = next((n for n in nodes if n.tag.endswith('TabBar')
                            and n.get('visible') == 'true'
                            and any(c.get('name') == '理财' for c in n.iter())
@@ -208,7 +265,10 @@ class AlipayCase(Case):
 
     def return_to(self, *anchors):
         for _ in range(6):
-            if self.find(*anchors) is not None:
+            nodes = self.nodes()
+            if self.dismiss_navigation_overlays(nodes):
+                continue
+            if self.find(*anchors, nodes=nodes) is not None:
                 return
             self.back()
         self.fail('未返回目标页面：{}'.format(anchors))
@@ -226,6 +286,7 @@ class AlipayCase(Case):
             self.device.swipe(0.5, 0.995, 0.5, 0.15, 0.1)
             time.sleep(2)
             if self.device.app_current().get('bundleId') == 'com.apple.springboard':
+                self._restore_idle_settings()
                 return
         self.fail('滑动后未回到 Home 页')
 

@@ -1,5 +1,6 @@
 """iOS 动态性能用例的 WDA 公共能力。"""
 
+import base64
 import logging
 import os
 import time
@@ -16,6 +17,8 @@ class WdaCase(Case):
     all_app_package_list = []
     TEST_TIME = 1
     STEP_INTERVAL = 1
+    CHECK_STEP_FOREGROUND = False
+    SOURCE_TIMEOUT = None
 
     def __init__(self, result_path):
         super().__init__(result_path)
@@ -66,13 +69,33 @@ class WdaCase(Case):
         return True
 
     def step(self, number, text):
+        self.current_step = '{}、{}'.format(number, text)
+        self.check_step_foreground(number)
         if self._has_step:
             time.sleep(self.STEP_INTERVAL)
         self._has_step = True
         self._start_step_trace(number)
-        self.current_step = '{}、{}'.format(number, text)
         logging.info(self.current_step)
         SeaOfStarsAW.trace_thread.add_log(self.APP_NAME, self.current_step)
+
+    def check_step_foreground(self, number):
+        """视频用例在步骤边界恢复后台应用；进程退出时终止本轮。"""
+        if not self.CHECK_STEP_FOREGROUND or number == 1:
+            return
+        state = self.device._session_http.post(
+            '/wda/apps/state', {'bundleId': self.PACKAGE}, timeout=15)['value']
+        if state == 4:  # XCUIApplicationStateRunningForeground
+            return
+        if state not in (2, 3):
+            raise RuntimeError('{}进程已退出，需从首步重新运行用例'.format(self.APP_NAME))
+        logging.warning('%s已进入后台（state=%s），重新激活后继续', self.APP_NAME, state)
+        self.device._session_http.post(
+            '/wda/apps/activate', {'bundleId': self.PACKAGE}, timeout=15)
+        time.sleep(2)
+        state = self.device._session_http.post(
+            '/wda/apps/state', {'bundleId': self.PACKAGE}, timeout=15)['value']
+        if state != 4:
+            raise RuntimeError('{}未恢复到前台，请检查锁屏和系统弹窗'.format(self.APP_NAME))
 
     def fail(self, message):
         path = os.path.join(
@@ -80,7 +103,12 @@ class WdaCase(Case):
             'step_{}_failed.png'.format(self.current_step.split('、')[0]),
         )
         try:
-            self.device.screenshot(path)
+            if self.SOURCE_TIMEOUT is None:
+                self.device.screenshot(path)
+            else:
+                data = self.device.http.get('screenshot', timeout=8).value
+                with open(path, 'wb') as output:
+                    output.write(base64.b64decode(data))
         except Exception:
             logging.exception('失败截图保存失败')
         raise AssertionError('{}：{}'.format(self.current_step, message))
@@ -88,7 +116,11 @@ class WdaCase(Case):
     def nodes(self):
         # 百度 WebView 页面切换时偶尔返回一次空 source，短暂重试避免误判。
         for _ in range(3):
-            source = self.device.source()
+            if self.SOURCE_TIMEOUT is None:
+                source = self.device.source()
+            else:
+                source = self.device.http.get(
+                    'source?format=xml', timeout=self.SOURCE_TIMEOUT).value
             if source and source.strip():
                 return list(ET.fromstring(source).iter())
             time.sleep(0.5)
@@ -130,6 +162,35 @@ class WdaCase(Case):
             self.fail('控件没有可点击区域：{}'.format(self.node_name(node)))
         # facebook-wda 会把 float 当百分比，绝对坐标必须转成 int。
         self.device.click(round(x + width / 2), round(y + height / 2))
+
+    def tap_viewport(self, x, y):
+        """用 WDA W3C 动作点击整数屏幕坐标，避免坐标 tap 隐含的 frame 查询。"""
+        self.device._session_http.post('/actions', {'actions': [{
+            'type': 'pointer', 'id': 'screen_touch',
+            'parameters': {'pointerType': 'touch'},
+            'actions': [
+                {'type': 'pointerMove', 'duration': 0, 'origin': 'viewport',
+                 'x': round(x), 'y': round(y)},
+                {'type': 'pointerDown', 'button': 0},
+                {'type': 'pause', 'duration': 80},
+                {'type': 'pointerUp', 'button': 0},
+            ],
+        }]}, timeout=30)
+
+    def swipe_viewport(self, x1, y1, x2, y2, duration=0.3):
+        """通过 WDA W3C viewport 坐标滑动，不查询应用 frame。"""
+        self.device._session_http.post('/actions', {'actions': [{
+            'type': 'pointer', 'id': 'screen_swipe',
+            'parameters': {'pointerType': 'touch'},
+            'actions': [
+                {'type': 'pointerMove', 'duration': 0, 'origin': 'viewport',
+                 'x': round(x1), 'y': round(y1)},
+                {'type': 'pointerDown', 'button': 0},
+                {'type': 'pointerMove', 'duration': round(duration * 1000),
+                 'origin': 'viewport', 'x': round(x2), 'y': round(y2)},
+                {'type': 'pointerUp', 'button': 0},
+            ],
+        }]}, timeout=30)
 
     def tap(self, *names, fallback=None, wait=2, timeout=6, min_y=None,
             max_y=None, contains=False, choose='first'):

@@ -55,6 +55,25 @@ weditor
 
 在打开的浏览器页面中选择 iOS，连接对应设备的 WDA 服务，即可查看界面和控件信息。
 
+### 定向调试用例
+
+WDA 已启动且没有其他用例占用设备时，可按名称串行调试一次，保留每一步的截图、页面 XML 和 `summary.json`。调试模式不采集性能 trace，不修改正式运行次数：
+
+```bash
+.venv/bin/python tools/debug_cases.py PerformanceDynamic_weixin_0190
+```
+
+需要快速复验时可加 `--failure-only`，仅在失败时保存截图和 XML。暂停调试会在结果中记录 `INTERRUPTED`。
+
+添加朋友用例需要配置实际查询的微信号；通话好友可选配：
+
+```bash
+WEIXIN_FRIEND_ACCOUNT='实际微信号' .venv/bin/python tools/debug_cases.py PerformanceDynamic_weixin_0020
+WEIXIN_CALL_CONTACT='测试好友名称' .venv/bin/python tools/debug_cases.py PerformanceDynamic_weixin_0040
+```
+
+微信通话遇到“当前聊天存在风险，无法进行通话”时，按当前测试约定点击“我知道了”后继续；日志会明确记录通话被跳过。
+
 ## iPhone17 第 2–6 页 App 包名
 
 来源：2026-09-07 从已连接设备的 SpringBoard 桌面布局直接读取。页码从主屏幕第 1 页起算，底部 Dock 不计入页码。共 81 个 App，按桌面图标顺序排列。

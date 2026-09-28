@@ -9,6 +9,8 @@ from cases.wda_case_common import WdaCase
 class DouyinJisuCase(WdaCase):
     PACKAGE = 'com.ss.iphone.ugc.aweme.lite'
     APP_NAME = '抖音极速版'
+    CHECK_STEP_FOREGROUND = True
+    SOURCE_TIMEOUT = 30
 
     def _enable_continuous_ui_mode(self):
         """避免视频持续刷新让 XCTest 一直等待应用进入 idle。"""
@@ -19,10 +21,12 @@ class DouyinJisuCase(WdaCase):
                 'waitForIdleTimeout': current.get('waitForIdleTimeout', 10),
                 'animationCoolOffTimeout': current.get(
                     'animationCoolOffTimeout', 2),
+                'accessibilityDeadline': current.get('accessibilityDeadline', 0),
             }
             self.device.appium_settings({
                 'waitForIdleTimeout': 0,
                 'animationCoolOffTimeout': 0,
+                'accessibilityDeadline': 5,
             })
         except Exception:
             logging.exception('WDA 不支持 idle 等待设置，继续使用默认配置')
@@ -32,7 +36,8 @@ class DouyinJisuCase(WdaCase):
         if previous is None:
             return
         try:
-            self.device.appium_settings(previous)
+            self.device._session_http.post(
+                '/appium/settings', {'settings': previous}, timeout=8)
         except Exception:
             logging.exception('恢复 WDA idle 等待设置失败')
         self._previous_idle_settings = None
@@ -49,6 +54,7 @@ class DouyinJisuCase(WdaCase):
 
     def start_douyin(self):
         self._enable_continuous_ui_mode()
+        self._screen_size = self.device.window_size()
         self.start_app(wait=7)
         self._dismiss_optional_prompts()
         nodes = self.nodes()
@@ -118,27 +124,49 @@ class DouyinJisuCase(WdaCase):
             self.device.click(100, 300)
         time.sleep(5)
 
+    def _is_author_profile(self, nodes):
+        return (self.find('作品', contains=True, nodes=nodes) is not None
+                and self.find('获赞', '粉丝', '抖音号', contains=True, nodes=nodes) is not None)
+
     def open_author(self):
         nodes = self.nodes()
-        author = None
-        for node in nodes:
-            name = self.node_name(node)
-            y = float(node.get('y', 0))
-            if (node.get('visible') == 'true'
-                    and node.tag == 'XCUIElementTypeButton'
-                    and name.startswith('@') and 200 < y < 760):
-                author = node
-                break
-        if author is None:
-            logging.warning('作者名称未暴露给 WDA，使用作者头像坐标')
-            self.device.click(352, 360)
-        else:
+        size = self._screen_size
+        author = next((n for n in nodes if n.get('visible') == 'true'
+                       and n.tag == 'XCUIElementTypeButton'
+                       and self.node_name(n).startswith('@')
+                       and size.height * 0.2 < float(n.get('y', 0)) < size.height * 0.93), None)
+        if author is not None:
             self.tap_node(author)
-        time.sleep(6)
-        if self.find('返回', max_y=140) is None:
-            self.fail('点击作者后未进入 UP 主主页')
+        else:
+            avatars = [n for n in nodes if n.get('visible') == 'true'
+                       and n.tag in ('XCUIElementTypeButton', 'XCUIElementTypeOther', 'XCUIElementTypeImage')
+                       and float(n.get('x', 0)) > size.width * 0.8
+                       and size.height * 0.3 < float(n.get('y', 0)) < size.height * 0.65
+                       and 35 <= float(n.get('width', 0)) <= 80
+                       and 35 <= float(n.get('height', 0)) <= 90]
+            if not avatars:
+                self.fail('当前视频未找到作者名称或头像')
+            self.tap_node(min(avatars, key=lambda n: float(n.get('y', 0))))
+        deadline = time.monotonic() + 15
+        while time.monotonic() < deadline:
+            if self._is_author_profile(self.nodes()):
+                return
+            time.sleep(1)
+        self.fail('点击作者后未进入 UP 主主页（缺少作品和用户信息）')
+
+    def browse(self, up, down):
+        # 缓存尺寸并发送整数坐标；比例手势会先查询 window_size，视频页可能卡住。
+        size = self._screen_size
+        for start, end, count in ((0.75, 0.35, up), (0.35, 0.75, down)):
+            for _ in range(count):
+                self.device.swipe(round(size.width * 0.5), round(size.height * start),
+                                  round(size.width * 0.5), round(size.height * end), 0.3)
+                time.sleep(1)
+        time.sleep(1)
 
     def browse_author(self):
+        if not self._is_author_profile(self.nodes()):
+            self.fail('浏览前页面不是 UP 主主页')
         self.browse(5, 5)
 
     def open_first_author_video(self):
@@ -149,7 +177,8 @@ class DouyinJisuCase(WdaCase):
                                    for key in ('x', 'y', 'width', 'height'))
             if (node.get('visible') == 'true'
                     and node.tag in ('XCUIElementTypeOther', 'XCUIElementTypeCell')
-                    and y > 430 and width >= 110 and height >= 130):
+                    and y > 300 and self._screen_size.width * 0.26 <= width <= self._screen_size.width * 0.36
+                    and 100 <= height <= self._screen_size.height * 0.4):
                 candidates.append(node)
         if candidates:
             self.tap_node(sorted(candidates, key=lambda item: (
@@ -160,9 +189,21 @@ class DouyinJisuCase(WdaCase):
         time.sleep(6)
 
     def open_comments(self):
-        # 2026-09-11 weditor（402×874）：播放器评论按钮位于右侧中部。
-        self.device.click(372, 530)
-        time.sleep(5)
+        size = self._screen_size
+        # 作者视频持续播放时 AX source/frame 可能超时；使用实机右侧评论位置。
+        self.tap_viewport(round(size.width * 0.932), round(size.height * 0.642))
+        time.sleep(3)
+        self.wait_comment_panel()
+
+    def wait_comment_panel(self):
+        deadline = time.monotonic() + 12
+        while time.monotonic() < deadline:
+            nodes = self.nodes()
+            if self.find('CommentPanelCloseButton', 'CommentInputViewTextView',
+                         '说点什么', '评论输入框', contains=True, nodes=nodes) is not None:
+                return
+            time.sleep(1)
+        self.fail('点击评论后未打开评论面板')
 
     def return_main(self):
         self.device.swipe(0.5, 0.35, 0.5, 0.9, 0.3)

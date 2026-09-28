@@ -34,8 +34,9 @@ class DoubaoCase(WdaCase):
             time.sleep(0.5)
 
     def _allow_expected_permission(self):
+        nodes = self.nodes()
         for name in ('允许完全访问', '允许', '允许在使用 App 时访问'):
-            node = self.find(name)
+            node = self.find(name, nodes=nodes)
             if node is not None:
                 self.tap_node(node)
                 time.sleep(5)
@@ -155,14 +156,29 @@ class DoubaoCase(WdaCase):
     def send_composer(self, wait=7):
         self.tap('发送', wait=wait)
 
+    def enter_album_from_more(self):
+        # 授权弹窗可能在点击相册后才出现，不能只在点击“更多”时处理。
+        deadline = time.monotonic() + 20
+        tapped_album = False
+        while time.monotonic() < deadline:
+            self._allow_expected_permission()
+            nodes = self.nodes()
+            choices = [n for n in nodes if n.get('visible') == 'true'
+                       and self.node_name(n).startswith(('未选中，照片', '未选中 照片'))]
+            if self.find('所有照片', '最近项目', nodes=nodes) is not None or choices:
+                return
+            if self.find('设置相册权限', nodes=nodes) is not None:
+                self.fail('豆包相册权限已被拒绝，请在系统设置中开启照片访问后复跑')
+            album = self.find('相册', '从相册选择', min_y=400, nodes=nodes)
+            if album is not None and not tapped_album:
+                self.tap_node(album)
+                tapped_album = True
+            time.sleep(1)
+        self.fail('点击相册后未进入照片选择页')
+
     def open_photo_picker(self):
         self.tap('更多', wait=2)
-        self._allow_expected_permission()
-        album = self.find('相册', min_y=500)
-        if album is not None:
-            self.tap_node(album)
-            time.sleep(5)
-        self.wait_for('所有照片', timeout=15)
+        self.enter_album_from_more()
 
     def select_two_photos(self):
         for _ in range(2):

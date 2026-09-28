@@ -88,7 +88,8 @@ class TaobaoCase(WdaCase):
 
     def fail_if_login_required(self, nodes=None):
         nodes = self.nodes() if nodes is None else nodes
-        if (self.find('获取短信验证码', nodes=nodes) is not None or
+        if (self.find('获取短信验证码', '支付宝快捷登录', '短信验证码登录',
+                      nodes=nodes) is not None or
                 self.find('支付宝登录', contains=True, nodes=nodes) is not None):
             self.fail('淘宝账号未登录，请先登录测试账号再运行')
 
@@ -168,8 +169,10 @@ class TaobaoCase(WdaCase):
         time.sleep(4)
 
     def open_search(self):
+        self.fail_if_login_required()
         self.tap('搜索栏', max_y=170, wait=3)
         self.fail_if_security_verification()
+        self.fail_if_login_required()
         fields = [node for node in self.nodes()
                   if node.get('visible') == 'true'
                   and node.tag in ('XCUIElementTypeSearchField',

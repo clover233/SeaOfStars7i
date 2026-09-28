@@ -17,6 +17,7 @@ class WeixinCase(WdaCase):
     VIDEO_GROUP = os.getenv('WEIXIN_VIDEO_GROUP', '性能测试群')
     VOICE_GROUP = os.getenv('WEIXIN_VOICE_GROUP', '性能测试语音')
     TEST_ACCOUNT = os.getenv('WEIXIN_TEST_ACCOUNT', '测试账号')
+    CALL_CONTACT = os.getenv('WEIXIN_CALL_CONTACT', '测试')
     CONTACT_NAME = os.getenv('WEIXIN_CONTACT_NAME', '测试账号')
     RECOMMEND_RECIPIENT = os.getenv(
         'WEIXIN_RECOMMEND_RECIPIENT', '文件传输助手')
@@ -220,12 +221,17 @@ class WeixinCase(WdaCase):
         self.return_weixin_home()
 
     def enter_mixue_order_page(self):
-        # 2026-09-17 WEditor（402x874）：蜜雪冰城首次进入会出现一个
-        # 不在 WDA 树中的全屏活动弹窗，关闭按钮中心为 (201, 660)。
-        # 即使弹窗已消失，随后点击可访问的底部“点餐”也会校正页面状态。
-        self.device.click(201, 660)
-        time.sleep(1)
-        self.tap('点餐', min_y=760, wait=3)
+        nodes = self.nodes()
+        if self.find('门店列表', nodes=nodes) is None:
+            order = self.find('点餐', min_y=760, nodes=nodes)
+            if order is None:
+                # 小程序可能恢复在活动详情页；先返回其首页，避免固定
+                # 坐标误点活动卡片。门店列表本身则无需再找底部点餐。
+                home = self.find('回到首页', '返回', max_y=140, nodes=nodes)
+                if home is not None:
+                    self.tap_node(home)
+                    time.sleep(3)
+            self.tap('点餐', min_y=760, wait=3)
         self.dismiss_mini_program_permissions()
         nodes = self.nodes()
         if self.find('门店列表', nodes=nodes) is not None:
@@ -240,6 +246,7 @@ class WeixinCase(WdaCase):
                 float(item.get('y', 0)), float(item.get('x', 0))))
             self.tap_node(stores[0])
             time.sleep(7)
+        self.wait_for('经典菜单', timeout=12)
 
     def tongcheng_query_trains(self):
         # 同程主体由 Canvas 绘制，WDA 只暴露微信胶囊。以下坐标由
@@ -374,14 +381,25 @@ class WeixinCase(WdaCase):
         self.enter_text(text)
         self.tap('Send', '发送', min_y=700, wait=3)
 
-    def select_photos(self, count):
+    def visible_picker_photos(self):
+        nodes = self.nodes()
+        navigation = [node for node in nodes
+                      if node.tag == 'XCUIElementTypeNavigationBar'
+                      and node.get('visible') == 'true']
+        top = max((float(node.get('y', 0)) + float(node.get('height', 0))
+                   for node in navigation), default=98)
+        bottom = self.device.window_size().height - 90
         photos = []
         seen = set()
-        for node in self.nodes():
+        for node in nodes:
             name = self.node_name(node)
             if (node.get('visible') != 'true'
                     or node.tag != 'XCUIElementTypeImage'
-                    or not name.startswith('照片')):
+                    or not name.startswith(('照片', '实况'))):
+                continue
+            y = float(node.get('y', 0))
+            height = float(node.get('height', 0))
+            if y < top or y + height > bottom:
                 continue
             rect = tuple(node.get(key) for key in ('x', 'y', 'width', 'height'))
             if rect not in seen:
@@ -389,6 +407,10 @@ class WeixinCase(WdaCase):
                 photos.append(node)
         photos.sort(key=lambda item: (
             float(item.get('y', 0)), float(item.get('x', 0))))
+        return photos
+
+    def select_photos(self, count):
+        photos = self.visible_picker_photos()
         if len(photos) < count:
             self.fail('相册至少需要预置{}张照片，当前仅找到{}张'.format(
                 count, len(photos)))
@@ -399,12 +421,15 @@ class WeixinCase(WdaCase):
             y = float(node.get('y', 0)) + 20
             self.device.click(round(x), round(y))
             time.sleep(0.4)
+            nodes = self.nodes()
+            if self.find('发表的实况照片将包含', contains=True, nodes=nodes) is not None:
+                self.tap('我知道了', wait=1)
+        self.wait_for('发送({})'.format(count), '完成({})'.format(count),
+                      '预览({})'.format(count), contains=True,
+                      min_y=700, timeout=5)
 
     def open_first_photo_preview(self):
-        photos = [node for node in self.nodes()
-                  if node.get('visible') == 'true'
-                  and node.tag == 'XCUIElementTypeImage'
-                  and self.node_name(node).startswith('照片')]
+        photos = self.visible_picker_photos()
         if not photos:
             self.fail('相册中没有可预览的照片')
         photos.sort(key=lambda item: (
@@ -579,6 +604,32 @@ class WeixinCase(WdaCase):
             self.edge_back(wait=1)
         self.fail('通话结束后未返回微信聊天页')
 
+    def hang_up_call(self):
+        deadline = time.monotonic() + 8
+        while True:
+            nodes = self.nodes()
+            risk = self.find('当前聊天存在风险', '无法进行通话',
+                             contains=True, nodes=nodes)
+            if risk is not None:
+                if not hasattr(self, 'skipped_steps'):
+                    self.skipped_steps = []
+                self.skipped_steps.append({'step': self.current_step,
+                                           'reason': self.node_name(risk)})
+                logging.warning('通话被微信风控阻止，按调试约定跳过：%s',
+                                self.node_name(risk))
+                self.tap('我知道了', wait=1)
+                self.return_weixin_chat()
+                return False
+            hangup = self.find('挂断', '结束通话', contains=True, nodes=nodes)
+            if hangup is not None:
+                self.tap_node(hangup)
+                time.sleep(2)
+                self.return_weixin_chat()
+                return True
+            if time.monotonic() >= deadline:
+                self.fail('通话页未找到挂断按钮，请检查通话是否成功建立及权限')
+            time.sleep(0.5)
+
     def open_official_account(self, name):
         account = self.find(name, min_y=120, max_y=780)
         if account is not None:
@@ -646,6 +697,12 @@ class WeixinCase(WdaCase):
         self.tap_node(item)
         time.sleep(7)
         nodes = self.nodes()
+        # 当前“夜读”先展开二级菜单，需点击菜单中的链接才会进入详情。
+        submenu = self.find('银发运动圈', min_y=600, max_y=841, nodes=nodes)
+        if used_name == '夜读' and submenu is not None:
+            self.tap_node(submenu)
+            time.sleep(7)
+            nodes = self.nodes()
         # 个别公众号菜单仍显示但链接已经失效，点击后会停留在对话页。
         if (self.find('发消息', min_y=760, nodes=nodes) is not None
                 and self.find(used_name, min_y=760, nodes=nodes) is not None):
@@ -683,7 +740,8 @@ class WeixinCase(WdaCase):
         for _ in range(5):
             nodes = self.nodes()
             if (self.bottom_tab('通讯录', nodes=nodes) is not None
-                    and self.find('公众号', nodes=nodes) is not None):
+                    and self.find('公众号', '公众号、服务号和企业号',
+                                  nodes=nodes) is not None):
                 return
             self.edge_back(wait=1)
         self.fail('未能返回通讯录')
@@ -710,9 +768,9 @@ class WeixinCase(WdaCase):
             self.tap_node(account)
             time.sleep(5)
             return
-        # 新版公众号信息流主体为 Canvas。右上角头像入口固定在 402x874
-        # 竖屏的 (375, 78)，进入“关注”后账号列表重新具备可访问性。
-        self.device.click(375, 78)
+        # 新版公众号信息流主体为 Canvas。头像入口距右边缘约 27 点，
+        # 使用当前屏宽，避免 430 点设备误点左侧的搜索入口。
+        self.device.click(self.device.window_size().width - 27, 78)
         time.sleep(3)
         self.tap('关注', min_y=90, max_y=190, wait=3)
         account = self.find(account_name, contains=True, min_y=130)
@@ -769,13 +827,16 @@ class WeixinCase(WdaCase):
 
     def start_chat_video_recording(self, duration=4):
         """新版微信没有单独“录像”页签，长按快门录制。"""
-        if self.find('拍照', min_y=650) is None:
+        shutter = self.find('拍照', min_y=650)
+        if shutter is None:
             self.fail('相机快门未就绪')
+        x = round(float(shutter.get('x', 0)) + float(shutter.get('width', 0)) / 2)
+        y = round(float(shutter.get('y', 0)) + float(shutter.get('height', 0)) / 2)
         self._video_record_error = None
 
         def record():
             try:
-                self.device.tap_hold(201, 777, duration)
+                self.device.tap_hold(x, y, duration)
             except Exception as error:  # 在主线程汇总 WDA 异常
                 self._video_record_error = error
 
