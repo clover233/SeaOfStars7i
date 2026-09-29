@@ -9,6 +9,7 @@ from cases.wda_case_common import WdaCase
 class JingdongCase(WdaCase):
     PACKAGE = 'com.360buy.jdmobile'
     APP_NAME = '京东'
+    SOURCE_TIMEOUT = 30
 
     @contextmanager
     def capture_trace_5s(self, iteration, step_number):
@@ -39,7 +40,8 @@ class JingdongCase(WdaCase):
         previous = getattr(self, '_previous_idle_settings', None)
         if previous is not None:
             try:
-                self.device.appium_settings(previous)
+                self.device._session_http.post(
+                    '/appium/settings', {'settings': previous}, timeout=8)
             except Exception:
                 logging.exception('恢复 WDA idle 设置失败')
         self._previous_idle_settings = None

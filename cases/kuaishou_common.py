@@ -10,6 +10,7 @@ from cases.wda_case_common import WdaCase
 class KuaishouCase(WdaCase):
     PACKAGE = 'com.jiangjia.gif'
     APP_NAME = '快手'
+    SOURCE_TIMEOUT = 30
 
     @contextmanager
     def capture_trace_5s(self, iteration, step_number):
@@ -47,13 +48,16 @@ class KuaishouCase(WdaCase):
         if previous is None:
             return
         try:
-            self.device.appium_settings(previous)
+            self.device._session_http.post(
+                '/appium/settings', {'settings': previous}, timeout=8)
         except Exception:
             logging.exception('恢复 WDA idle 等待设置失败')
         self._previous_idle_settings = None
 
     def prepare_iteration(self):
         self._enable_continuous_ui_mode()
+        self.device.home()
+        time.sleep(1)
         self._screen_size = self.device.window_size()
         try:
             self.device.app_terminate(self.PACKAGE)
@@ -206,6 +210,13 @@ class KuaishouCase(WdaCase):
         self.device.click(round(size.width * 0.948), round(size.height * 0.079))
         time.sleep(4)
         nodes = self.nodes()
+        if self.find('举报', min_y=size.height * 0.4, nodes=nodes) is not None:
+            # 观众资料是底部浮层，边缘返回手势会继续切换资料而不退出直播。
+            self.device.click(round(size.width * 0.5), round(size.height * 0.25))
+            time.sleep(2)
+            self.device.click(round(size.width * 0.948), round(size.height * 0.079))
+            time.sleep(3)
+            nodes = self.nodes()
         if self.find('看了这么久，留个关注再走吧！', nodes=nodes) is not None:
             exit_button = self.find('退出直播间', '退出', nodes=nodes)
             if exit_button is not None:

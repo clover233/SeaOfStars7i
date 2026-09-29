@@ -56,6 +56,8 @@ class DouyinCase(WdaCase):
     def prepare_iteration(self):
         """冷启动可让每轮都从首页开始，且不把清理动作记入首步 trace。"""
         self._enable_continuous_ui_mode()
+        self.device.home()
+        time.sleep(1)
         self._screen_size = self.device.window_size()
         try:
             self.device.app_terminate(self.PACKAGE)

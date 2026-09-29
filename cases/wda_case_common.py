@@ -164,8 +164,8 @@ class WdaCase(Case):
         self.device.click(round(x + width / 2), round(y + height / 2))
 
     def tap_viewport(self, x, y):
-        """用 WDA W3C 动作点击整数屏幕坐标，避免坐标 tap 隐含的 frame 查询。"""
-        self.device._session_http.post('/actions', {'actions': [{
+        """用浅层应用快照执行坐标点击，动作后恢复完整页面定位。"""
+        self._perform_viewport_actions([{
             'type': 'pointer', 'id': 'screen_touch',
             'parameters': {'pointerType': 'touch'},
             'actions': [
@@ -175,11 +175,11 @@ class WdaCase(Case):
                 {'type': 'pause', 'duration': 80},
                 {'type': 'pointerUp', 'button': 0},
             ],
-        }]}, timeout=30)
+        }])
 
     def swipe_viewport(self, x1, y1, x2, y2, duration=0.3):
-        """通过 WDA W3C viewport 坐标滑动，不查询应用 frame。"""
-        self.device._session_http.post('/actions', {'actions': [{
+        """发送 W3C viewport 滑动，并限制客户端请求等待时间。"""
+        self._perform_viewport_actions([{
             'type': 'pointer', 'id': 'screen_swipe',
             'parameters': {'pointerType': 'touch'},
             'actions': [
@@ -190,7 +190,22 @@ class WdaCase(Case):
                  'origin': 'viewport', 'x': round(x2), 'y': round(y2)},
                 {'type': 'pointerUp', 'button': 0},
             ],
-        }]}, timeout=30)
+        }])
+
+    def _perform_viewport_actions(self, actions):
+        # XCTest 解析 screenPoint 仍会取应用快照。京东视频页实机验证：
+        # 深度 50 时点击超时，动作期间只取根节点后可以正常切换栏目。
+        current = self.device._session_http.get('/appium/settings', timeout=8).value
+        previous = {key: current[key] for key in (
+            'snapshotMaxDepth', 'accessibilityDeadline')}
+        try:
+            self.device._session_http.post('/appium/settings', {'settings': {
+                'snapshotMaxDepth': 1, 'accessibilityDeadline': 0,
+            }}, timeout=8)
+            self.device._session_http.post('/actions', {'actions': actions}, timeout=30)
+        finally:
+            self.device._session_http.post(
+                '/appium/settings', {'settings': previous}, timeout=8)
 
     def tap(self, *names, fallback=None, wait=2, timeout=6, min_y=None,
             max_y=None, contains=False, choose='first'):

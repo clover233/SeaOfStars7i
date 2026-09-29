@@ -52,9 +52,13 @@ class DouyinJisuCase(WdaCase):
             self.tap_node(button)
             time.sleep(2)
 
-    def start_douyin(self):
+    def prepare_iteration(self):
         self._enable_continuous_ui_mode()
+        self.device.home()
+        time.sleep(1)
         self._screen_size = self.device.window_size()
+
+    def start_douyin(self):
         self.start_app(wait=7)
         self._dismiss_optional_prompts()
         nodes = self.nodes()
