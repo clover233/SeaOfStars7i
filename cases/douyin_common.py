@@ -10,6 +10,8 @@ from cases.wda_case_common import WdaCase
 class DouyinCase(WdaCase):
     PACKAGE = 'com.ss.iphone.ugc.Aweme'
     APP_NAME = '抖音'
+    CHECK_STEP_FOREGROUND = True
+    SOURCE_TIMEOUT = 30
 
     @contextmanager
     def capture_trace_5s(self, iteration, step_number):
@@ -45,7 +47,8 @@ class DouyinCase(WdaCase):
         if previous is None:
             return
         try:
-            self.device.appium_settings(previous)
+            self.device._session_http.post(
+                '/appium/settings', {'settings': previous}, timeout=8)
         except Exception:
             logging.exception('恢复 WDA idle 等待设置失败')
         self._previous_idle_settings = None
@@ -53,6 +56,9 @@ class DouyinCase(WdaCase):
     def prepare_iteration(self):
         """冷启动可让每轮都从首页开始，且不把清理动作记入首步 trace。"""
         self._enable_continuous_ui_mode()
+        self.device.home()
+        time.sleep(1)
+        self._screen_size = self.device.window_size()
         try:
             self.device.app_terminate(self.PACKAGE)
         except Exception:
@@ -457,15 +463,39 @@ class DouyinCase(WdaCase):
         self.tap('发送', contains=True, min_y=650, wait=5)
 
     def open_comments(self):
-        self.tap('评论', max_y=700, wait=3)
-        self.wait_for('CommentInputViewTextView',
-                      '发条评论，和大家一起讨论', timeout=8)
+        size = self._screen_size
+        for attempt in range(6):
+            nodes = self.nodes()
+            comments = [n for n in self.matching_nodes('评论', contains=True, nodes=nodes)
+                        if n.tag == 'XCUIElementTypeButton'
+                        and float(n.get('x', 0)) > size.width * 0.7
+                        and size.height * 0.2 <= float(n.get('y', 0)) < size.height * 0.85]
+            if comments:
+                self.tap_node(comments[0])
+                self.wait_for('CommentPanelCloseButton', 'CommentInputViewTextView',
+                              '发条评论，和大家一起讨论', timeout=10)
+                return
+            # 推荐流会插入直播预告/广告；这类内容没有视频评论入口。
+            if attempt < 5:
+                logging.info('当前推荐内容无视频评论入口，切换到下一条可评论视频')
+                self.swipe_up_times(1)
+        self.fail('推荐流中未找到可评论的视频')
 
     def browse_comments_once(self, close_after):
-        self.swipe_up_times(1)
-        time.sleep(1)
+        nodes = self.nodes()
+        close = self.find('CommentPanelCloseButton', nodes=nodes)
+        top = max(size_y for size_y in (
+            float(close.get('y', 0)) if close is not None else self._screen_size.height * 0.4,
+            self._screen_size.height * 0.35))
+        size = self._screen_size
+        # 手势完全落在评论面板内，不能从面板外起滑去切换底层视频。
+        self.device.swipe(round(size.width * 0.5), round(size.height * 0.8),
+                          round(size.width * 0.5), round(max(top + 60, size.height * 0.55)), 0.3)
+        time.sleep(2)
         if close_after:
             self.tap('CommentPanelCloseButton', wait=2)
+            if self.find('CommentPanelCloseButton') is not None:
+                self.fail('浏览评论后面板未关闭')
 
     def focus_comment_input(self):
         self.tap('CommentInputViewTextView',
@@ -595,26 +625,21 @@ class DouyinCase(WdaCase):
             logging.warning('首次加购按钮未暴露给 WDA，使用 weditor 核对坐标')
             self.device.click(157, 813)
         time.sleep(4)
-        self.tap('加入购物车', wait=6, timeout=10)
-
         nodes = self.nodes()
-        prompt = self.find('请选择 ', contains=True, max_y=230, nodes=nodes)
-        if prompt is not None:
-            self._select_required_product_options(self.node_name(prompt), nodes)
-            self.tap('加入购物车', min_y=760, wait=4, timeout=8)
+        prompt = self.find('请选择', contains=True, max_y=250, nodes=nodes)
+        self._select_required_product_options(
+            self.node_name(prompt) if prompt is not None else '', nodes)
+        self.tap('加入购物车', min_y=760, wait=2, timeout=10)
 
         deadline = time.monotonic() + 10
         while True:
             nodes = self.nodes()
             if self.find('加入购物车成功', nodes=nodes) is not None:
                 return
-            # 部分商品只显示短暂 toast，随后直接收起规格面板；底部客服或
-            # 带数量的购物车入口同样可以证明加购已完成。
-            if self.find('客服', min_y=760, nodes=nodes) is not None:
-                return
-            carts = self.matching_nodes(
-                '购物车', contains=True, min_y=740, nodes=nodes)
-            if carts:
+            # 必须确认规格面板收起；背景详情中的客服/购物车也会被 AX
+            # 标记为 visible，不能单独作为成功依据。第 16 步继续核验购物车。
+            sheet = self.find('加入购物车', min_y=760, nodes=nodes)
+            if sheet is None and self.find('客服', min_y=760, nodes=nodes) is not None:
                 return
             if time.monotonic() >= deadline:
                 self.fail('点击加入购物车后未看到成功状态')
@@ -622,7 +647,7 @@ class DouyinCase(WdaCase):
 
     def _select_required_product_options(self, prompt_text, nodes):
         required = [item.strip() for item in prompt_text.replace(
-            '请选择 ', '', 1).split('/') if item.strip()]
+            '请选择', '', 1).split('/') if item.strip()]
         section_names = {
             '颜色', '版本', '成色', '机身颜色', '存储容量', '网络类型',
         }
@@ -634,10 +659,14 @@ class DouyinCase(WdaCase):
         headers.sort(key=lambda item: item[0])
 
         for index, (header_y, header_name, _) in enumerate(headers):
-            if header_name not in required:
+            if required and header_name not in required:
                 continue
             next_y = (headers[index + 1][0]
                       if index + 1 < len(headers) else 780)
+            if any(self.node_name(node).startswith('已选择')
+                   and header_y < float(node.get('y', 0)) < next_y
+                   for node in nodes):
+                continue
             choices = []
             for node in nodes:
                 name = self.node_name(node)
@@ -646,7 +675,7 @@ class DouyinCase(WdaCase):
                 if (node.get('visible') == 'true'
                         and node.get('enabled') != 'false'
                         and header_y + 18 < y < next_y
-                        and 20 <= x < 370 and 20 <= width <= 150
+                        and 10 <= x < self._screen_size.width - 20 and 20 <= width <= 150
                         and 12 <= height <= 50
                         and name and name not in section_names
                         and name not in ('缺货', '小图', '查看全部')):
@@ -709,34 +738,48 @@ class DouyinCase(WdaCase):
         # “全部商品/商品分类”或“全部/分类”。
         self.wait_for('全部商品', '分类', contains=True, timeout=12)
 
+    def _is_mall_home(self, nodes):
+        return (self.find('我的订单', contains=True, max_y=300, nodes=nodes) is not None
+                and self.find('搜索栏', contains=True, max_y=180, nodes=nodes) is not None)
+
     def return_mall_home(self):
-        for _ in range(8):
+        for _ in range(10):
             nodes = self.nodes()
-            if self.find('我的订单', contains=True,
-                         max_y=260, nodes=nodes) is not None:
+            if self._is_mall_home(nodes):
                 return
-            back = self.find(
-                '返回', '返回。按钮', '关闭,按钮', max_y=140, nodes=nodes)
-            if back is not None:
-                self.tap_node(back)
-            elif self.find('客服', min_y=760, nodes=nodes) is not None:
-                # 部分二手商品详情页的左上角返回按钮没有 accessibility 名称。
-                self.device.click(22, 84)
+            mall = self.find('商城', max_y=130, nodes=nodes)
+            if mall is not None:
+                self.tap_node(mall)
             else:
-                self.device.swipe(0.01, 0.5, 0.88, 0.5, 0.3)
+                back = self.find('返回', '返回。按钮', '关闭,按钮', max_y=150, nodes=nodes)
+                if back is not None:
+                    self.tap_node(back)
+                else:
+                    self.device.click(round(self._screen_size.width * 0.055),
+                                      round(self._screen_size.height * 0.09))
             time.sleep(3)
-        self.fail('多次返回后仍未到达抖音商城首页')
+        self.fail('多次返回后仍未到达抖音商城首页（未同时找到订单和搜索入口）')
 
     def open_mall_cart(self):
+        self.return_mall_home()
         nodes = self.nodes()
-        carts = [node for node in self.matching_nodes(
-            '购物车', contains=True, min_y=100, max_y=160, nodes=nodes)
-                 if float(node.get('x', 0)) > 320]
+        size = self._screen_size
+        carts = [n for n in self.matching_nodes('购物车', contains=True, max_y=220, nodes=nodes)
+                 if float(n.get('x', 0)) > size.width * 0.7
+                 and float(n.get('width', 0)) <= 120
+                 and float(n.get('height', 0)) <= 100]
         if not carts:
             self.fail('商城首页未找到右上角购物车')
-        self.tap_node(carts[-1])
-        time.sleep(6)
-        self.wait_for('管理', max_y=130)
+        self.tap_node(carts[0])
+        deadline = time.monotonic() + 12
+        while time.monotonic() < deadline:
+            nodes = self.nodes()
+            if self.find('管理', max_y=150, nodes=nodes) is not None:
+                return
+            if self.find('暂无商品', '购物车空空如也', contains=True, nodes=nodes) is not None:
+                self.fail('已进入购物车，但购物车为空，请检查前面的加购结果')
+            time.sleep(1)
+        self.fail('点击商城购物车后未进入可管理的购物车页面')
 
     def manage_cart(self):
         self.tap('管理', max_y=130, wait=3)
@@ -845,7 +888,7 @@ class DouyinCase(WdaCase):
                             if node.get('visible') == 'true'
                             and node.tag == 'XCUIElementTypeButton'
                             and self.node_name(node).startswith('@')
-                            and 550 <= float(node.get('y', 0)) <= 790]
+                            and 400 <= float(node.get('y', 0)) <= self._screen_size.height * 0.93]
             if author_links:
                 self.tap_node(author_links[0])
             else:
@@ -865,7 +908,7 @@ class DouyinCase(WdaCase):
                     self.device.click(373, 395)
         time.sleep(5)
         nodes = self.nodes()
-        if self.find('作品', contains=True, min_y=420, nodes=nodes) is None:
+        if self.find('作品', contains=True, nodes=nodes) is None:
             # 图文推荐点击头像区域后可能先进入作品详情；此时作者名称位于
             # 顶栏中部，点击它可继续进入同一个 UP 主主页。
             top_authors = []
@@ -883,7 +926,7 @@ class DouyinCase(WdaCase):
                 self.fail('推荐内容未暴露可点击的 UP 主入口')
             self.tap_node(top_authors[0])
             time.sleep(6)
-        self.wait_for('作品', contains=True, min_y=420, timeout=12)
+        self.wait_for('作品', contains=True, timeout=12)
 
     def open_me(self):
         self.tap('我', min_y=740, wait=6)
@@ -895,18 +938,21 @@ class DouyinCase(WdaCase):
 
     def open_followed_profile(self, creator):
         self.tap(creator, min_y=320, wait=7)
-        self.wait_for('作品', contains=True, min_y=450, timeout=12)
+        self.wait_for('作品', contains=True, timeout=12)
 
     def _profile_video_cards(self, nodes):
+        size = self._screen_size
+        works = self.find('作品', contains=True, nodes=nodes)
+        top = float(works.get('y', 0)) + float(works.get('height', 0)) if works is not None else 300
         cards = []
         for node in nodes:
             name = self.node_name(node)
-            y, width, height = (float(node.get(key, 0))
-                                for key in ('y', 'width', 'height'))
+            y, width, height = (float(node.get(key, 0)) for key in ('y', 'width', 'height'))
             if (node.get('visible') == 'true'
-                    and node.tag in ('XCUIElementTypeOther', 'XCUIElementTypeCell')
+                    and node.tag in ('XCUIElementTypeOther', 'XCUIElementTypeCell', 'XCUIElementTypeButton')
                     and '视频,' in name and '直播中' not in name
-                    and y >= 500 and 110 <= width <= 150 and height >= 130):
+                    and y >= top and size.width * 0.26 <= width <= size.width * 0.36
+                    and height >= 100):
                 cards.append(node)
         return sorted(cards, key=lambda node: (
             float(node.get('y', 0)), float(node.get('x', 0))))
@@ -914,12 +960,14 @@ class DouyinCase(WdaCase):
     def _ensure_profile_top(self):
         for _ in range(7):
             nodes = self.nodes()
+            if self.find('作品', contains=True, nodes=nodes) is None:
+                self.fail('当前页面不是 UP 主作品页')
             cards = self._profile_video_cards(nodes)
-            if (self.find('获赞', max_y=350, nodes=nodes) is not None
-                    and cards):
+            if (self.find('获赞', '抖音号', contains=True,
+                          max_y=self._screen_size.height * 0.5, nodes=nodes) is not None and cards):
                 return nodes
             self.swipe_down_times(1, pause=1)
-        self.fail('未能回到 UP 主主页顶部')
+        self.fail('未能回到 UP 主主页顶部或未找到视频宫格')
 
     def open_profile_video(self, number):
         nodes = self._ensure_profile_top()
@@ -930,7 +978,7 @@ class DouyinCase(WdaCase):
         target = cards[number - 1]
         center_y = (float(target.get('y', 0))
                     + float(target.get('height', 0)) / 2)
-        if center_y > 790:
+        if center_y > self._screen_size.height * 0.85:
             self.device.swipe(0.5, 0.78, 0.5, 0.55, 0.3)
             time.sleep(2)
             matches = self.matching_nodes(target_name)
@@ -945,7 +993,8 @@ class DouyinCase(WdaCase):
     def return_to_profile(self):
         # 视频页可能让 XCTest 的窗口/页面树查询一直等待。这里必须使用
         # 绝对坐标；比例坐标会让 facebook-wda 先调用 window_size()。
-        self.device.swipe(4, 437, 354, 437, 0.3)
+        size = self._screen_size
+        self.swipe_viewport(4, size.height * 0.5, size.width * 0.88, size.height * 0.5, 0.3)
         time.sleep(4)
         # 不在视频页立即读取 source；下一次主页操作再做结构化定位。
 
@@ -978,4 +1027,4 @@ class DouyinCase(WdaCase):
             logging.warning('搜索用户卡片未暴露给 WDA，使用 weditor 核对坐标')
             self.device.click(190, 280)
         time.sleep(7)
-        self.wait_for('作品', contains=True, min_y=420, timeout=12)
+        self.wait_for('作品', contains=True, timeout=12)

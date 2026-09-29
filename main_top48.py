@@ -698,8 +698,7 @@ Basic5 = [
 ]
 
 # Basics = [Basic1, Basic2, Basic3, Basic4, Basic5]
-Basic0 = [PerformanceDynamic_meituan_0010,PerformanceDynamic_meituan_0080,PerformanceDynamic_meituan_0090]
-Basics = [Basic0]
+Basics = [Basic1]
 
 # VMSTATS采集命令
 VMSTATS_COMMAND = """\

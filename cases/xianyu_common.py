@@ -82,7 +82,7 @@ class XianyuCase(WdaCase):
                     return
                 continue
             if self.find('分享至', contains=True, nodes=nodes) is not None:
-                self.device.click(201, 830)
+                self.device.click(0.5, 0.93)
                 time.sleep(2)
                 continue
             self.edge_back(wait=2)
@@ -134,7 +134,7 @@ class XianyuCase(WdaCase):
     def open_and_close_share(self):
         self.tap('分享按钮', max_y=150, wait=4)
         # 当前分享面板整体为 Canvas，“取消”未单独暴露。
-        self.device.click(201, 830)
+        self.device.click(0.5, 0.93)
         time.sleep(3)
         if self.find('分享按钮', max_y=150) is None:
             self.fail('关闭分享面板后未返回商品详情页')

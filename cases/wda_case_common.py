@@ -1,5 +1,6 @@
 """iOS 动态性能用例的 WDA 公共能力。"""
 
+import base64
 import logging
 import os
 import time
@@ -16,6 +17,8 @@ class WdaCase(Case):
     all_app_package_list = []
     TEST_TIME = 1
     STEP_INTERVAL = 1
+    CHECK_STEP_FOREGROUND = False
+    SOURCE_TIMEOUT = None
 
     def __init__(self, result_path):
         super().__init__(result_path)
@@ -23,6 +26,8 @@ class WdaCase(Case):
         self.current_step = '准备环境'
         self._has_step = False
         self._trace_active = False
+        self._trace_iteration = 0
+        self._trace_step_number = None
 
     @property
     def device(self):
@@ -30,23 +35,32 @@ class WdaCase(Case):
 
     @contextmanager
     def capture_trace(self, iteration, step_number):
-        """只包围首尾单步；每轮固定生成两份短 trace。"""
-        if SeaOfStarsAW.trace_thread is None:
-            SeaOfStarsAW.start_trace_thread()
+        """记录当前轮次，并在显式上下文结束时收尾当前步骤。"""
+        self._trace_iteration = iteration
         if step_number == 1:
             self._has_step = False
         try:
-            SeaOfStarsAW.start_trace(
-                self.trace_dir_path,
-                self.__class__.__name__,
-                'round_{}_step_{}'.format(iteration + 1, step_number),
-                self.screenshot_dir_path,
-            )
-            self._trace_active = True
             yield
         finally:
-            self._trace_active = False
+            if self._trace_active and self._trace_step_number == step_number:
+                SeaOfStarsAW.stop_trace()
+                self._trace_active = False
+                self._trace_step_number = None
+
+    def _start_step_trace(self, step_number):
+        """为每个用例步骤单独生成一份 trace 日志。"""
+        if SeaOfStarsAW.trace_thread is None:
+            SeaOfStarsAW.start_trace_thread()
+        if self._trace_active:
             SeaOfStarsAW.stop_trace()
+        SeaOfStarsAW.start_trace(
+            self.trace_dir_path,
+            self.__class__.__name__,
+            'step_{}'.format(step_number),
+            self.screenshot_dir_path,
+        )
+        self._trace_active = True
+        self._trace_step_number = step_number
 
     @SeaOfStarsAW.function_log
     def set_up(self):
@@ -55,13 +69,33 @@ class WdaCase(Case):
         return True
 
     def step(self, number, text):
+        self.current_step = '{}、{}'.format(number, text)
+        self.check_step_foreground(number)
         if self._has_step:
             time.sleep(self.STEP_INTERVAL)
         self._has_step = True
-        self.current_step = '{}、{}'.format(number, text)
+        self._start_step_trace(number)
         logging.info(self.current_step)
-        if self._trace_active and SeaOfStarsAW.trace_thread is not None:
-            SeaOfStarsAW.trace_thread.add_log(self.APP_NAME, self.current_step)
+        SeaOfStarsAW.trace_thread.add_log(self.APP_NAME, self.current_step)
+
+    def check_step_foreground(self, number):
+        """视频用例在步骤边界恢复后台应用；进程退出时终止本轮。"""
+        if not self.CHECK_STEP_FOREGROUND or number == 1:
+            return
+        state = self.device._session_http.post(
+            '/wda/apps/state', {'bundleId': self.PACKAGE}, timeout=15)['value']
+        if state == 4:  # XCUIApplicationStateRunningForeground
+            return
+        if state not in (2, 3):
+            raise RuntimeError('{}进程已退出，需从首步重新运行用例'.format(self.APP_NAME))
+        logging.warning('%s已进入后台（state=%s），重新激活后继续', self.APP_NAME, state)
+        self.device._session_http.post(
+            '/wda/apps/activate', {'bundleId': self.PACKAGE}, timeout=15)
+        time.sleep(2)
+        state = self.device._session_http.post(
+            '/wda/apps/state', {'bundleId': self.PACKAGE}, timeout=15)['value']
+        if state != 4:
+            raise RuntimeError('{}未恢复到前台，请检查锁屏和系统弹窗'.format(self.APP_NAME))
 
     def fail(self, message):
         path = os.path.join(
@@ -69,7 +103,12 @@ class WdaCase(Case):
             'step_{}_failed.png'.format(self.current_step.split('、')[0]),
         )
         try:
-            self.device.screenshot(path)
+            if self.SOURCE_TIMEOUT is None:
+                self.device.screenshot(path)
+            else:
+                data = self.device.http.get('screenshot', timeout=8).value
+                with open(path, 'wb') as output:
+                    output.write(base64.b64decode(data))
         except Exception:
             logging.exception('失败截图保存失败')
         raise AssertionError('{}：{}'.format(self.current_step, message))
@@ -77,7 +116,11 @@ class WdaCase(Case):
     def nodes(self):
         # 百度 WebView 页面切换时偶尔返回一次空 source，短暂重试避免误判。
         for _ in range(3):
-            source = self.device.source()
+            if self.SOURCE_TIMEOUT is None:
+                source = self.device.source()
+            else:
+                source = self.device.http.get(
+                    'source?format=xml', timeout=self.SOURCE_TIMEOUT).value
             if source and source.strip():
                 return list(ET.fromstring(source).iter())
             time.sleep(0.5)
@@ -119,6 +162,50 @@ class WdaCase(Case):
             self.fail('控件没有可点击区域：{}'.format(self.node_name(node)))
         # facebook-wda 会把 float 当百分比，绝对坐标必须转成 int。
         self.device.click(round(x + width / 2), round(y + height / 2))
+
+    def tap_viewport(self, x, y):
+        """用浅层应用快照执行坐标点击，动作后恢复完整页面定位。"""
+        self._perform_viewport_actions([{
+            'type': 'pointer', 'id': 'screen_touch',
+            'parameters': {'pointerType': 'touch'},
+            'actions': [
+                {'type': 'pointerMove', 'duration': 0, 'origin': 'viewport',
+                 'x': round(x), 'y': round(y)},
+                {'type': 'pointerDown', 'button': 0},
+                {'type': 'pause', 'duration': 80},
+                {'type': 'pointerUp', 'button': 0},
+            ],
+        }])
+
+    def swipe_viewport(self, x1, y1, x2, y2, duration=0.3):
+        """发送 W3C viewport 滑动，并限制客户端请求等待时间。"""
+        self._perform_viewport_actions([{
+            'type': 'pointer', 'id': 'screen_swipe',
+            'parameters': {'pointerType': 'touch'},
+            'actions': [
+                {'type': 'pointerMove', 'duration': 0, 'origin': 'viewport',
+                 'x': round(x1), 'y': round(y1)},
+                {'type': 'pointerDown', 'button': 0},
+                {'type': 'pointerMove', 'duration': round(duration * 1000),
+                 'origin': 'viewport', 'x': round(x2), 'y': round(y2)},
+                {'type': 'pointerUp', 'button': 0},
+            ],
+        }])
+
+    def _perform_viewport_actions(self, actions):
+        # XCTest 解析 screenPoint 仍会取应用快照。京东视频页实机验证：
+        # 深度 50 时点击超时，动作期间只取根节点后可以正常切换栏目。
+        current = self.device._session_http.get('/appium/settings', timeout=8).value
+        previous = {key: current[key] for key in (
+            'snapshotMaxDepth', 'accessibilityDeadline')}
+        try:
+            self.device._session_http.post('/appium/settings', {'settings': {
+                'snapshotMaxDepth': 1, 'accessibilityDeadline': 0,
+            }}, timeout=8)
+            self.device._session_http.post('/actions', {'actions': actions}, timeout=30)
+        finally:
+            self.device._session_http.post(
+                '/appium/settings', {'settings': previous}, timeout=8)
 
     def tap(self, *names, fallback=None, wait=2, timeout=6, min_y=None,
             max_y=None, contains=False, choose='first'):

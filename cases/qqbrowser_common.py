@@ -87,8 +87,27 @@ class QqBrowserCase(WdaCase):
 
     def search(self, keyword):
         self.enter_text(keyword, clear=True)
-        self.tap('搜索按钮', '搜索', max_y=130, wait=7)
-        self.dismiss_optional_prompts()
+        for _ in range(2):
+            nodes = self.nodes()
+            top = self.find('搜索按钮', '搜索', '前往', max_y=150, nodes=nodes)
+            keyboard = self.find('前往', 'Go', '搜索', 'Search', min_y=400, nodes=nodes)
+            submit = top if top is not None else keyboard
+            if submit is not None:
+                self.tap_node(submit)
+            else:
+                # 新版输入栏右侧是无名箭头，原“搜索”文字按钮已移除。
+                size = self.device.window_size()
+                self.device.click(round(size.width * 0.89),
+                                  round(size.height * 0.088))
+            time.sleep(4)
+            nodes = self.nodes()
+            if not any(n.tag == 'XCUIElementTypeKeyboard'
+                       and n.get('visible') == 'true' for n in nodes):
+                self.dismiss_optional_prompts()
+                if self.find(keyword, contains=True) is None:
+                    self.fail('提交搜索后未显示关键词：{}'.format(keyword))
+                return
+        self.fail('点击搜索后仍停留在输入页')
 
     def browse_page(self, up, down):
         for _ in range(up):

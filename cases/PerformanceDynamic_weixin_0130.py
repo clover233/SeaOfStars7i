@@ -16,7 +16,7 @@ class PerformanceDynamic_weixin_0130(WeixinCase):
             self.step(2, '点击通讯录')
             self.open_contacts()
             self.step(3, '点击公众号')
-            self.tap('公众号', min_y=300, max_y=500, wait=3)
+            self.tap('公众号', '公众号、服务号和企业号', min_y=300, max_y=500, wait=3)
             self.step(4, '点击腾讯新闻的公众号名片')
             self.open_official_account(self.TENCENT_NEWS_ACCOUNT)
             self.step(5, '返回公众号界面')

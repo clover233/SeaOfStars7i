@@ -9,6 +9,18 @@ class DoubaoCase(WdaCase):
     PACKAGE = 'com.bot.doubao'
     APP_NAME = '豆包'
 
+    def _dismiss_connect_computer(self):
+        nodes = self.nodes()
+        if self.find('连接你的电脑', nodes=nodes) is None:
+            return
+        close = self.find('关闭', max_y=130, nodes=nodes)
+        if close is not None:
+            self.tap_node(close)
+        else:
+            # 连接电脑说明页的左上角关闭图标未暴露给 WDA。
+            self.device.click(25, 85)
+        time.sleep(2)
+
     def wait_for(self, *names, **kwargs):
         timeout = kwargs.pop('timeout', 12)
         deadline = time.monotonic() + timeout
@@ -22,8 +34,9 @@ class DoubaoCase(WdaCase):
             time.sleep(0.5)
 
     def _allow_expected_permission(self):
+        nodes = self.nodes()
         for name in ('允许完全访问', '允许', '允许在使用 App 时访问'):
-            node = self.find(name)
+            node = self.find(name, nodes=nodes)
             if node is not None:
                 self.tap_node(node)
                 time.sleep(5)
@@ -50,6 +63,7 @@ class DoubaoCase(WdaCase):
         if new_chat is not None:
             self.tap_node(new_chat)
             time.sleep(4)
+        self._dismiss_connect_computer()
 
     def _text_field(self, nodes=None):
         nodes = self.nodes() if nodes is None else nodes
@@ -63,6 +77,7 @@ class DoubaoCase(WdaCase):
         return fields[-1] if fields else None
 
     def ensure_text_field(self):
+        self._dismiss_connect_computer()
         bottom = self.find('回到底部')
         if bottom is not None:
             self.tap_node(bottom)
@@ -77,12 +92,13 @@ class DoubaoCase(WdaCase):
             field = self._text_field()
             if field is not None:
                 return field
-        self.device.click(0.43, 0.9)
-        time.sleep(2)
-        field = self._text_field()
-        if field is None:
-            self.fail('未找到豆包对话输入框')
-        return field
+        for y in (0.92, 0.90, 0.92):
+            self.device.click(0.43, y)
+            time.sleep(2)
+            field = self._text_field()
+            if field is not None:
+                return field
+        self.fail('未找到豆包对话输入框')
 
     def input_text(self, text):
         field = self.ensure_text_field()
@@ -98,32 +114,37 @@ class DoubaoCase(WdaCase):
         element.set_text(text)
         time.sleep(1)
 
-    def _wait_for_answer(self, question, timeout=60):
+    def _wait_for_answer(self, question, previous_texts, timeout=60):
         deadline = time.monotonic() + timeout
-        previous = -1
+        previous = None
         stable = 0
         while True:
-            response_length = 0
-            for node in self.nodes():
-                if node.tag != 'XCUIElementTypeTextView':
-                    continue
-                name = self.node_name(node)
-                if question in name:
-                    response_length = max(response_length, len(name))
-            if response_length > len(question) + 20:
-                stable = stable + 1 if response_length == previous else 0
+            bottom = self.find('回到底部')
+            if bottom is not None:
+                self.tap_node(bottom)
+                time.sleep(1)
+            response = tuple(self.node_name(node) for node in self.nodes()
+                             if node.tag == 'XCUIElementTypeTextView'
+                             and node.get('visible') == 'true'
+                             and self.node_name(node) not in previous_texts
+                             and question not in self.node_name(node)
+                             and not self.node_name(node).startswith('发消息'))
+            if sum(map(len, response)) > len(question) + 20:
+                stable = stable + 1 if response == previous else 0
                 if stable >= 2:
                     return
-            previous = response_length
+            previous = response
             if time.monotonic() >= deadline:
                 self.fail('豆包回答超时：{}'.format(question))
             time.sleep(2)
 
     def ask(self, question):
         self.input_text(question)
+        previous_texts = {self.node_name(node) for node in self.nodes()
+                          if node.tag == 'XCUIElementTypeTextView'}
         self.tap('Send', wait=2, timeout=8)
         time.sleep(8)
-        self._wait_for_answer(question)
+        self._wait_for_answer(question, previous_texts)
 
     def take_photo(self):
         self.tap('相机', choose='last', wait=3)
@@ -135,14 +156,29 @@ class DoubaoCase(WdaCase):
     def send_composer(self, wait=7):
         self.tap('发送', wait=wait)
 
+    def enter_album_from_more(self):
+        # 授权弹窗可能在点击相册后才出现，不能只在点击“更多”时处理。
+        deadline = time.monotonic() + 20
+        tapped_album = False
+        while time.monotonic() < deadline:
+            self._allow_expected_permission()
+            nodes = self.nodes()
+            choices = [n for n in nodes if n.get('visible') == 'true'
+                       and self.node_name(n).startswith(('未选中，照片', '未选中 照片'))]
+            if self.find('所有照片', '最近项目', nodes=nodes) is not None or choices:
+                return
+            if self.find('设置相册权限', nodes=nodes) is not None:
+                self.fail('豆包相册权限已被拒绝，请在系统设置中开启照片访问后复跑')
+            album = self.find('相册', '从相册选择', min_y=400, nodes=nodes)
+            if album is not None and not tapped_album:
+                self.tap_node(album)
+                tapped_album = True
+            time.sleep(1)
+        self.fail('点击相册后未进入照片选择页')
+
     def open_photo_picker(self):
         self.tap('更多', wait=2)
-        self._allow_expected_permission()
-        album = self.find('相册', min_y=500)
-        if album is not None:
-            self.tap_node(album)
-            time.sleep(5)
-        self.wait_for('所有照片', timeout=15)
+        self.enter_album_from_more()
 
     def select_two_photos(self):
         for _ in range(2):

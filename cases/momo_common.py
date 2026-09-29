@@ -46,5 +46,11 @@ class MomoCase(WdaCase):
     def return_live_list(self):
         self.device.swipe(0.01, 0.5, 0.88, 0.5, 0.3)
         time.sleep(5)
+        # 返回列表后可能出现直播匹配弹窗，遮住底部 tab。
+        nodes = self.nodes()
+        reject = self.find('拒绝', nodes=nodes)
+        if reject is not None:
+            self.tap_node(reject)
+            time.sleep(2)
         if self.find('直播', min_y=780) is None:
             self.fail('未返回陌陌直播列表')

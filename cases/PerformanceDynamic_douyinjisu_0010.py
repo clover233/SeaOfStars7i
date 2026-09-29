@@ -8,6 +8,7 @@ class PerformanceDynamic_douyinjisu_0010(DouyinJisuCase):
     @SeaOfStarsAW.function_log
     def run_case(self):
         for iteration in range(self.TEST_TIME):
+            self.prepare_iteration()
             with self.capture_trace(iteration, 1):
                 self.step(1, '启动抖音极速版')
                 self.start_douyin()

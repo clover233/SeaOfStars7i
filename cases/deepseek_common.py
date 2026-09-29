@@ -14,7 +14,10 @@ class DeepSeekCase(WdaCase):
         while True:
             fields = [node for node in self.nodes()
                       if node.get('visible') == 'true'
-                      and node.tag == 'XCUIElementTypeTextView']
+                      and node.get('enabled') != 'false'
+                      and node.tag == 'XCUIElementTypeTextView'
+                      and float(node.get('y', 0)) >= 300
+                      and 0 < float(node.get('height', 0)) <= 180]
             if fields:
                 return fields[-1]
             if time.monotonic() >= deadline:
@@ -37,11 +40,11 @@ class DeepSeekCase(WdaCase):
 
     def ask(self, text):
         node = self.wait_for_text_view()
-        selector = {'type': node.tag, 'visible': True}
-        name = node.get('name')
-        if name:
-            selector['name'] = name
-        field = self.device(**selector)
+        self.tap_node(node)
+        # 回答正文也是 TextView；无名称时仅用 type/visible 会选中正文。
+        # 键盘弹出后输入栏仍位于 y>=300，且高度远小于回答容器。
+        field = self.device(xpath="//XCUIElementTypeTextView[@visible='true' "
+                            "and @enabled='true' and @y >= 300 and @height <= 180]")
         value = node.get('value') or ''
         if value and value != '发消息或按住说话':
             field.clear_text()

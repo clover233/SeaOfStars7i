@@ -19,7 +19,7 @@ class PerformanceDynamic_weixin_0060(WeixinCase):
             self.step(3, '点击右上角相机')
             self.open_moments_camera_menu()
             self.step(4, '点击拍摄')
-            self.tap('拍摄', min_y=600, wait=3)
+            self.tap('拍摄', contains=True, min_y=600, wait=3)
             self.step(5, '关闭相机，返回朋友圈')
             self.tap('关闭', max_y=140, wait=3)
             self.step(6, '再次点击右上角相机')

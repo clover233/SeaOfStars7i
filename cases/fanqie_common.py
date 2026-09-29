@@ -91,9 +91,31 @@ class FanqieCase(WdaCase):
             self.fail('书架中未找到已加入的《长生不死》')
         self.tap_node(book)
         time.sleep(4)
-        self.wait_for(
-            'reading navigation button back', '上一章', '下一章',
-            contains=True, timeout=10)
+        # 有些版本先展示书籍详情，阅读页又默认隐藏导航按钮。
+        for _ in range(3):
+            nodes = self.nodes()
+            read = self.find('继续阅读', '开始阅读', '立即阅读',
+                             contains=True, nodes=nodes)
+            if read is None:
+                break
+            self.tap_node(read)
+            time.sleep(3)
+        nodes = self.nodes()
+        if self.find('书架', min_y=730, nodes=nodes) is not None:
+            self.fail('点击书籍后仍停留在书架')
+        if self.find('reading navigation button back', '上一章', '下一章',
+                     contains=True, nodes=nodes) is None:
+            self.device.click(201, 437)
+            time.sleep(1)
+            nodes = self.nodes()
+        if (self.find('reading navigation button back', '上一章', '下一章',
+                      contains=True, nodes=nodes) is None
+                and not any(node.get('visible') == 'true'
+                            and node.tag == 'XCUIElementTypeStaticText'
+                            and float(node.get('y', 0)) > 130
+                            and len(self.node_name(node)) > 35
+                            for node in nodes)):
+            self.fail('点击书籍后未进入阅读页')
 
     def read_pages(self, left=5, right=5):
         for _ in range(left):
@@ -104,7 +126,12 @@ class FanqieCase(WdaCase):
             time.sleep(1)
 
     def leave_reader(self):
-        self.device.swipe(4, 437, 354, 437, 0.3)
+        back = self.find('reading navigation button back', '返回',
+                         max_y=150, contains=True)
+        if back is not None:
+            self.tap_node(back)
+        else:
+            self.device.swipe(4, 437, 354, 437, 0.3)
         time.sleep(3)
         self.wait_for('书架', min_y=730, timeout=8)
 

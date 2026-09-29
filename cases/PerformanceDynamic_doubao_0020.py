@@ -26,11 +26,7 @@ class PerformanceDynamic_doubao_0020(DoubaoCase):
             self.tap('更多', wait=2)
             self._allow_expected_permission()
             self.step(7, '选择从相册选择')
-            album = self.find('相册', min_y=500)
-            if album is not None:
-                self.tap_node(album)
-                time.sleep(5)
-            self.wait_for('所有照片', timeout=15)
+            self.enter_album_from_more()
             self.step(8, '上滑3次浏览所有图片')
             self.browse(3, 0)
             self.step(9, '下滑3次浏览所有图片')

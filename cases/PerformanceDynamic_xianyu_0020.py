@@ -1,12 +1,12 @@
 import logging
 import time
-import openpyxl
-from threading import Timer
 from aw import SeaOfStarsAW
-from cases.CaseBase import Case
+from cases.wda_case_common import WdaCase
 
 
-class PerformanceDynamic_xianyu_0020(Case):
+class PerformanceDynamic_xianyu_0020(WdaCase):
+    APP_NAME = '闲鱼'
+    STEP_INTERVAL = 0
     all_app_package_list = ['']
     TEST_TIME = 1
 
@@ -33,48 +33,36 @@ class PerformanceDynamic_xianyu_0020(Case):
             SeaOfStarsAW.ut_device.unlock()
             time.sleep(2)
 
-        for test_time in range(0, self.TEST_TIME):
-            step = 0
+        for iteration in range(self.TEST_TIME):
+            with self.capture_trace(iteration, 1):
+                self.step(1, '打开闲鱼，等待10s')
+                SeaOfStarsAW.ut_device.swipe_left()
+                SeaOfStarsAW.ut_device.click(0.37, 0.713)
+                time.sleep(10)
 
-            # SeaOfStarsAW.start_trace(self.trace_dir_path, self.__class__.__name__, 'step_' + str(step),
-            #                          self.screenshot_dir_path)
-
-            app_name ="闲鱼"
-
-            step1 = "打开闲鱼,等待10s"
-            logging.info('启动闲鱼')
-            SeaOfStarsAW.trace_thread.add_log(app_name, step1)
-            SeaOfStarsAW.ut_device.swipe_left()
-            SeaOfStarsAW.ut_device.click(0.37, 0.713)
-            time.sleep(10)
-
-            step2 = "切换到新发 上滑3次 下滑3次 每次停留2s"
-            SeaOfStarsAW.trace_thread.add_log(app_name, step2)
+            self.step(2, '切换到新发，上滑3次，下滑3次，每次停留2s')
             SeaOfStarsAW.ut_device.click(0.288, 0.134)
-            for i in range(3):
+            for _ in range(3):
                 SeaOfStarsAW.ut_device.swipe_up()
                 time.sleep(2)
-            for i in range(3):
+            for _ in range(3):
                 SeaOfStarsAW.ut_device.swipe_down()
                 time.sleep(2)
 
-
-            step3 = "切换到服饰 上滑3次 下滑3次 每次停留2s"
-            SeaOfStarsAW.trace_thread.add_log(app_name, step3)
+            self.step(3, '切换到服饰，上滑3次，下滑3次，每次停留2s')
             SeaOfStarsAW.ut_device.click(0.713, 0.13)
-            for i in range(3):
+            for _ in range(3):
                 SeaOfStarsAW.ut_device.swipe_up()
                 time.sleep(2)
-            for i in range(3):
+            for _ in range(3):
                 SeaOfStarsAW.ut_device.swipe_down()
                 time.sleep(2)
 
-
-            step4 = "返回闲鱼首页 返回home页面 停留2s"
-            SeaOfStarsAW.trace_thread.add_log(app_name, step4)
-            SeaOfStarsAW.ut_device.click(0.054, 0.089)
-            SeaOfStarsAW.ut_device.home()
-            time.sleep(2)
-            SeaOfStarsAW.ut_device.swipe_right()
+            with self.capture_trace(iteration, 4):
+                self.step(4, '返回闲鱼首页，返回Home页面，停留2s')
+                SeaOfStarsAW.ut_device.click(0.054, 0.089)
+                SeaOfStarsAW.ut_device.home()
+                time.sleep(2)
+                SeaOfStarsAW.ut_device.swipe_right()
 
         logging.info('用例执行结束')

@@ -1,4 +1,3 @@
-import logging
 import time
 import os
 from aw import SeaOfStarsAW
@@ -13,8 +12,3 @@ class Case(object):
         SeaOfStarsAW.public_screen_shot_dir = self.screenshot_dir_path
         os.makedirs(self.trace_dir_path)
         os.makedirs(self.screenshot_dir_path)
-        logger = logging.getLogger()
-        formatter = logging.Formatter('%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s')
-        self.fh = logging.FileHandler(os.path.join(self.result_dir_path, 'log.txt'), encoding='utf-8')
-        self.fh.setFormatter(formatter)
-        logger.addHandler(self.fh)
