@@ -4,6 +4,7 @@ from cases.baidu_common import BaiduCase
 
 class PerformanceDynamic_baidu_0010(BaiduCase):
     """Excel 7.0.2：百度浏览器浏览搜索结果。"""
+    TRACE_LAST_STEP = 11
 
     @SeaOfStarsAW.function_log
     def run_case(self):

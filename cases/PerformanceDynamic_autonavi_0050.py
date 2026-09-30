@@ -4,6 +4,7 @@ from cases.autonavi_common import AutonaviCase
 
 class PerformanceDynamic_autonavi_0050(AutonaviCase):
     """Excel 7.0.2：浏览地图并查看西安钟楼打车车型。"""
+    TRACE_LAST_STEP = 15
 
     @SeaOfStarsAW.function_log
     def run_case(self):

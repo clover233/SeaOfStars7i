@@ -4,12 +4,13 @@ from cases.zhihu_common import ZhihuCase
 
 class PerformanceDynamic_zhihu_0030(ZhihuCase):
     """Excel 7.0.2：知乎推荐、热榜、评论及壁纸搜索。"""
+    TRACE_LAST_STEP = 20
 
     @SeaOfStarsAW.function_log
     def run_case(self):
         for iteration in range(self.TEST_TIME):
             self.prepare_iteration()
-            with self.capture_trace_5s(iteration, 1):
+            with self.capture_trace(iteration, 1):
                 self.step(1, '启动知乎')
                 self.start_zhihu()
             self.finish_zhihu_start()
@@ -49,6 +50,6 @@ class PerformanceDynamic_zhihu_0030(ZhihuCase):
             self.open_discover_equivalent()
             self.step(19, '返回知乎主界面')
             self.return_zhihu_home()
-            with self.capture_trace_5s(iteration, 20):
+            with self.capture_trace(iteration, 20):
                 self.step(20, '滑动返回Home页')
                 self.launcher()

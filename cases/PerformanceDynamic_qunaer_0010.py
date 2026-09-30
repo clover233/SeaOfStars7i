@@ -4,12 +4,13 @@ from cases.qunaer_common import QunarCase
 
 class PerformanceDynamic_qunaer_0010(QunarCase):
     """机票、酒店和酒店图片浏览。"""
+    TRACE_LAST_STEP = 19
 
     @SeaOfStarsAW.function_log
     def run_case(self):
         for iteration in range(self.TEST_TIME):
             self.prepare_iteration()
-            with self.capture_trace_5s(iteration, 1):
+            with self.capture_trace(iteration, 1):
                 self.step(1, '启动去哪儿旅行')
                 self.start_qunar()
 
@@ -65,6 +66,6 @@ class PerformanceDynamic_qunaer_0010(QunarCase):
             self.step(18, '返回去哪儿旅行主界面')
             self.back_tap(count=6)
 
-            with self.capture_trace_5s(iteration, 19):
+            with self.capture_trace(iteration, 19):
                 self.step(19, '滑动返回 Home 页')
                 self.launcher()

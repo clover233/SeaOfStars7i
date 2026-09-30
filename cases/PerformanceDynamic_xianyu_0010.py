@@ -4,12 +4,13 @@ from cases.xianyu_common import XianyuCase
 
 class PerformanceDynamic_xianyu_0010(XianyuCase):
     """Excel 7.0.2：闲鱼搜索和分享商品。"""
+    TRACE_LAST_STEP = 10
 
     @SeaOfStarsAW.function_log
     def run_case(self):
         for iteration in range(self.TEST_TIME):
             self.prepare_iteration()
-            with self.capture_trace_5s(iteration, 1):
+            with self.capture_trace(iteration, 1):
                 self.step(1, '启动闲鱼')
                 self.start_xianyu()
             self.finish_xianyu_start()
@@ -29,6 +30,6 @@ class PerformanceDynamic_xianyu_0010(XianyuCase):
             self.open_and_close_share()
             self.step(9, '返回闲鱼主界面')
             self.return_xianyu_home()
-            with self.capture_trace_5s(iteration, 10):
+            with self.capture_trace(iteration, 10):
                 self.step(10, '滑动返回Home页')
                 self.launcher()

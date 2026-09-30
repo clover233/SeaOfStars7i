@@ -7,6 +7,7 @@ from cases.wda_case_common import WdaCase
 
 class PerformanceDynamic_mms_0010(WdaCase):
     """Excel 7.0.2：进入通知类信息列表并浏览两条信息。"""
+    TRACE_LAST_STEP = 6
 
     PACKAGE = 'com.apple.MobileSMS'
     APP_NAME = '信息'

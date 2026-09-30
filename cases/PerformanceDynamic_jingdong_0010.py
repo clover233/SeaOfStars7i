@@ -4,12 +4,13 @@ from cases.jingdong_common import JingdongCase
 
 class PerformanceDynamic_jingdong_0010(JingdongCase):
     """浏览京东首页、手机数码、分类及电脑商品。"""
+    TRACE_LAST_STEP = 12
 
     @SeaOfStarsAW.function_log
     def run_case(self):
         for iteration in range(self.TEST_TIME):
             self.prepare_iteration()
-            with self.capture_trace_5s(iteration, 1):
+            with self.capture_trace(iteration, 1):
                 self.step(1, '启动京东')
                 self.start_jingdong()
             self.step(2, '首页浏览，上滑5次，下滑5次')
@@ -32,6 +33,6 @@ class PerformanceDynamic_jingdong_0010(JingdongCase):
             self.browse(5, 5)
             self.step(11, '返回京东主界面')
             self.return_home()
-            with self.capture_trace_5s(iteration, 12):
+            with self.capture_trace(iteration, 12):
                 self.step(12, '滑动返回Home页')
                 self.launcher()

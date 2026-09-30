@@ -4,12 +4,13 @@ from cases.tencentvideo_common import TencentVideoCase
 
 class PerformanceDynamic_tencentvideo_0010(TencentVideoCase):
     """Excel 7.0.2：腾讯视频首页、播放和搜索浏览。"""
+    TRACE_LAST_STEP = 14
 
     @SeaOfStarsAW.function_log
     def run_case(self):
         for iteration in range(self.TEST_TIME):
             self.prepare_iteration()
-            with self.capture_trace_5s(iteration, 1):
+            with self.capture_trace(iteration, 1):
                 self.step(1, '启动腾讯视频')
                 self.start_tencentvideo()
             self.step(2, '首页浏览，上滑2次，下滑2次')
@@ -36,6 +37,6 @@ class PerformanceDynamic_tencentvideo_0010(TencentVideoCase):
             self.browse(1, 1)
             self.step(13, '返回腾讯视频主界面')
             self.return_main()
-            with self.capture_trace_5s(iteration, 14):
+            with self.capture_trace(iteration, 14):
                 self.step(14, '滑动返回Home页')
                 self.launcher()

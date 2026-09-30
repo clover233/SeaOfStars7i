@@ -6,6 +6,7 @@ from cases.wda_case_common import WdaCase
 
 class PerformanceDynamic_pinduoduo_0010(WdaCase):
     """Excel 7.0.2：搜索华为手机，浏览商品和店铺。"""
+    TRACE_LAST_STEP = 11
 
     PACKAGE = 'com.xunmeng.pinduoduo'
     APP_NAME = '拼多多'

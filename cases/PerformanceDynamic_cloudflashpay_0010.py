@@ -4,6 +4,7 @@ from cases.cloudflashpay_common import CloudFlashPayCase
 
 class PerformanceDynamic_cloudflashpay_0010(CloudFlashPayCase):
     """Excel 7.0.2：云闪付浏览主界面、扫码和优惠分类。"""
+    TRACE_LAST_STEP = 12
 
     @SeaOfStarsAW.function_log
     def run_case(self):

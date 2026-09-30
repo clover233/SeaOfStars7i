@@ -4,12 +4,13 @@ from cases.youku_common import YoukuCase
 
 class PerformanceDynamic_youku_0020(YoukuCase):
     """Excel 7.0.2：优酷浏览动漫、电影及搜索播放。"""
+    TRACE_LAST_STEP = 13
 
     @SeaOfStarsAW.function_log
     def run_case(self):
         for iteration in range(self.TEST_TIME):
             self.prepare_iteration()
-            with self.capture_trace_5s(iteration, 1):
+            with self.capture_trace(iteration, 1):
                 self.step(1, '启动优酷')
                 self.start_youku()
             self.finish_youku_start()
@@ -37,6 +38,6 @@ class PerformanceDynamic_youku_0020(YoukuCase):
             self.browse(5, 5)
             self.step(12, '返回优酷主界面')
             self.return_youku_home()
-            with self.capture_trace_5s(iteration, 13):
+            with self.capture_trace(iteration, 13):
                 self.step(13, '上滑返回桌面')
                 self.launcher()

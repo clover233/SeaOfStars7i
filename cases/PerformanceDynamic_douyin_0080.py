@@ -4,12 +4,13 @@ from cases.douyin_common import DouyinCase
 
 class PerformanceDynamic_douyin_0080(DouyinCase):
     """Excel 7.0.2：浏览团购、美食商家和团购套餐。"""
+    TRACE_LAST_STEP = 11
 
     @SeaOfStarsAW.function_log
     def run_case(self):
         for iteration in range(self.TEST_TIME):
             self.prepare_iteration()
-            with self.capture_trace_5s(iteration, 1):
+            with self.capture_trace(iteration, 1):
                 self.step(1, '启动抖音')
                 self.start_app(wait=5)
             self.normalize_home_after_launch()
@@ -31,6 +32,6 @@ class PerformanceDynamic_douyin_0080(DouyinCase):
             self.buy_current_group_package()
             self.step(10, '返回抖音主界面')
             self.return_main()
-            with self.capture_trace_5s(iteration, 11):
+            with self.capture_trace(iteration, 11):
                 self.step(11, '滑动返回Home页')
                 self.launcher()

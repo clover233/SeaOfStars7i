@@ -4,12 +4,13 @@ from cases.meituan_common import MeituanCase
 
 class PerformanceDynamic_meituan_0010(MeituanCase):
     """进入外卖并往返浏览。"""
+    TRACE_LAST_STEP = 5
 
     @SeaOfStarsAW.function_log
     def run_case(self):
         for iteration in range(self.TEST_TIME):
             self.prepare_iteration()
-            with self.capture_trace_5s(iteration, 1):
+            with self.capture_trace(iteration, 1):
                 self.step(1, '启动美团')
                 self.start_meituan()
             self.step(2, '点击外卖')
@@ -18,6 +19,6 @@ class PerformanceDynamic_meituan_0010(MeituanCase):
             self.browse(5, 5)
             self.step(4, '返回美团主界面')
             self.return_meituan_home()
-            with self.capture_trace_5s(iteration, 5):
+            with self.capture_trace(iteration, 5):
                 self.step(5, '滑动返回Home页')
                 self.launcher()

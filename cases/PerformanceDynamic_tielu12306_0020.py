@@ -4,12 +4,13 @@ from cases.tielu12306_common import Tielu12306Case
 
 class PerformanceDynamic_tielu12306_0020(Tielu12306Case):
     """Excel 7.0.2：铁路12306酒店、订单和会员浏览。"""
+    TRACE_LAST_STEP = 10
 
     @SeaOfStarsAW.function_log
     def run_case(self):
         for iteration in range(self.TEST_TIME):
             self.prepare_iteration()
-            with self.capture_trace_5s(iteration, 1):
+            with self.capture_trace(iteration, 1):
                 self.step(1, '启动铁路12306')
                 self.start_tielu12306()
             self.step(2, '上滑2次，浏览首页')
@@ -28,6 +29,6 @@ class PerformanceDynamic_tielu12306_0020(Tielu12306Case):
             self.open_main_tab('首页')
             self.step(9, '下滑2次，浏览首页')
             self.browse(0, 2)
-            with self.capture_trace_5s(iteration, 10):
+            with self.capture_trace(iteration, 10):
                 self.step(10, '滑动返回Home页')
                 self.launcher()

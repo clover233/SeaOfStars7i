@@ -4,6 +4,7 @@ from cases.dingding_common import DingTalkCase
 
 class PerformanceDynamic_dingding_0010(DingTalkCase):
     """Excel 7.0.2：钉钉浏览群消息并发送文本。"""
+    TRACE_LAST_STEP = 9
 
     @SeaOfStarsAW.function_log
     def run_case(self):

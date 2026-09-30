@@ -4,12 +4,13 @@ from cases.xhs_common import XhsCase
 
 class PerformanceDynamic_xhs_0020(XhsCase):
     """小红书首页、收藏视频和评论浏览。"""
+    TRACE_LAST_STEP = 11
 
     @SeaOfStarsAW.function_log
     def run_case(self):
         for iteration in range(self.TEST_TIME):
             self.prepare_iteration()
-            with self.capture_trace_5s(iteration, 1):
+            with self.capture_trace(iteration, 1):
                 self.step(1, '启动小红书')
                 self.start_xhs()
 
@@ -34,6 +35,6 @@ class PerformanceDynamic_xhs_0020(XhsCase):
             self.step(10, '返回小红书主界面')
             self.return_home()
 
-            with self.capture_trace_5s(iteration, 11):
+            with self.capture_trace(iteration, 11):
                 self.step(11, '滑动返回Home页')
                 self.launcher()

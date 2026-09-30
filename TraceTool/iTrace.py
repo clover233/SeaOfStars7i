@@ -29,12 +29,12 @@ def xctrace_environment():
 
 class iTraceThread(threading.Thread):
 
-    # TRACE_TEMPLATE = 'Activity Monitor'
-    TRACE_TEMPLATE = 'UX-HitchAndMetal'
+    TRACE_TEMPLATE = 'Activity Monitor'
+    # TRACE_TEMPLATE = 'UX-HitchAndMetal'
 
-    # xctrace 自身的安全上限保持默认 600s；实际短采集由 5s 定时器主动，发送 SIGINT 结束，避免依赖过短的 --time-limit 生成不完整文档。
+    # xctrace 自身的安全上限保持默认 600s；实际短采集由 4s 定时器主动，发送 SIGINT 结束，避免依赖过短的 --time-limit 生成不完整文档。
     TRACE_TIME_LIMIT_SECONDS = 600
-    TRACE_CAPTURE_SECONDS = 5
+    TRACE_CAPTURE_SECONDS = 4
 
     def __init__(self):
         threading.Thread.__init__(self)
@@ -80,8 +80,8 @@ class iTraceThread(threading.Thread):
             logging.info("Trace进程未运行！无需停止.")
             return
 
-        # 每个用例都通过公共入口执行到这里。即使用例步骤早于 5s 完成，
-        # 也等定时器在实际开录约 5s 后主动停止；随后等待 xctrace 完整落盘。
+        # 每个用例都通过公共入口执行到这里。即使用例步骤早于 4s 完成，
+        # 也等定时器在实际开录约 4s 后主动停止；随后等待 xctrace 完整落盘。
         if not self.recording_finished.is_set():
             logging.info("等待约%ss后停止 Trace...", self.TRACE_CAPTURE_SECONDS)
         self.recording_finished.wait()
@@ -110,7 +110,7 @@ class iTraceThread(threading.Thread):
                 Path(self.log_path).touch()
                 # command = ['xctrace', 'record', '--device-name', 'iPhone (16.3.1)', '--template', 'UX-HitchAndMetal',
                 #            '--all-processes', '--output', temptrace_path, "--time-limit", '410s']
-                command = ['xctrace', 'record', '--device-name', 'iPhone17 (26.6.1)', '--template',
+                command = ['xctrace', 'record', '--device-name', 'iphone17pm (26.0)', '--template',
                            self.TRACE_TEMPLATE, '--all-processes', '--output', temptrace_path, "--time-limit",
                            '{}s'.format(self.TRACE_TIME_LIMIT_SECONDS)]
                 try:
@@ -134,7 +134,7 @@ class iTraceThread(threading.Thread):
 
                             self.realStartTrace = True
                             # --time-limit 保持 600s 作为安全上限；实际开录约
-                            # 5s 后主动 Ctrl-C，让 xctrace 走正常停止/保存流程。
+                            # 4s 后主动 Ctrl-C，让 xctrace 走正常停止/保存流程。
                             process = self.process
                             def stop_after_capture():
                                 if process and process.poll() is None:
@@ -223,5 +223,5 @@ if __name__ == "__main__":
     time.sleep(2)
     t_thread.add_log("抖音", "应用启动")
     time.sleep(3)
-    # 实际开录约5s后主动停止，并等待输出文件完整保存
+    # 实际开录约4s后主动停止，并等待输出文件完整保存
     t_thread.stop_trace()

@@ -4,12 +4,13 @@ from cases.weixin_common import WeixinCase
 
 class PerformanceDynamic_weixin_0190(WeixinCase):
     """Excel 7.0.2：微信选择多张照片并打开大图。"""
+    TRACE_LAST_STEP = 12
 
     @SeaOfStarsAW.function_log
     def run_case(self):
         for iteration in range(self.TEST_TIME):
             self.prepare_iteration()
-            with self.capture_trace_5s(iteration, 1):
+            with self.capture_trace(iteration, 1):
                 self.step(1, '启动微信')
                 self.start_weixin()
             self.finish_weixin_start()
@@ -34,6 +35,6 @@ class PerformanceDynamic_weixin_0190(WeixinCase):
             self.open_first_photo_preview()
             self.step(11, '返回微信主界面')
             self.return_weixin_home()
-            with self.capture_trace_5s(iteration, 12):
+            with self.capture_trace(iteration, 12):
                 self.step(12, '滑动返回Home页')
                 self.launcher()

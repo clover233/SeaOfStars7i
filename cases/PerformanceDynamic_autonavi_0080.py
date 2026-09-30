@@ -4,6 +4,7 @@ from cases.autonavi_common import AutonaviCase
 
 class PerformanceDynamic_autonavi_0080(AutonaviCase):
     """Excel 7.0.2：恢复高德并退出后台导航。"""
+    TRACE_LAST_STEP = 3
 
     @SeaOfStarsAW.function_log
     def run_case(self):

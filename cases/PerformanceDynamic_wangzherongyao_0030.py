@@ -6,6 +6,7 @@ from cases.wda_case_common import WdaCase
 
 class PerformanceDynamic_wangzherongyao_0030(WdaCase):
     """启动王者荣耀运行30秒后返回Home页。"""
+    TRACE_LAST_STEP = 2
 
     PACKAGE = 'com.tencent.smoba'
     APP_NAME = '王者荣耀'

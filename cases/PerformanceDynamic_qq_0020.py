@@ -6,6 +6,7 @@ from cases.qq_common import QqCase
 
 class PerformanceDynamic_qq_0020(QqCase):
     """Excel 7.0.2：浏览群图片并发送文字、表情和图片。"""
+    TRACE_LAST_STEP = 11
 
     @SeaOfStarsAW.function_log
     def run_case(self):

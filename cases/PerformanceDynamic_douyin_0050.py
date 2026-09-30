@@ -4,12 +4,13 @@ from cases.douyin_common import DouyinCase
 
 class PerformanceDynamic_douyin_0050(DouyinCase):
     """Excel 7.0.2：拍照预览，并与 Test 账号发送文字和媒体消息。"""
+    TRACE_LAST_STEP = 33
 
     @SeaOfStarsAW.function_log
     def run_case(self):
         for iteration in range(self.TEST_TIME):
             self.prepare_iteration()
-            with self.capture_trace_5s(iteration, 1):
+            with self.capture_trace(iteration, 1):
                 self.step(1, '启动抖音')
                 self.start_app(wait=5)
             self.normalize_home_after_launch()
@@ -76,6 +77,6 @@ class PerformanceDynamic_douyin_0050(DouyinCase):
             self.send_selected_share()
             self.step(32, '返回抖音主界面')
             self.return_main()
-            with self.capture_trace_5s(iteration, 33):
+            with self.capture_trace(iteration, 33):
                 self.step(33, '滑动返回Home页')
                 self.launcher()

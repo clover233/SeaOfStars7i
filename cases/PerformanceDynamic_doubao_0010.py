@@ -4,6 +4,7 @@ from cases.doubao_common import DoubaoCase
 
 class PerformanceDynamic_doubao_0010(DoubaoCase):
     """Excel 7.0.2：豆包连续提问并浏览回答。"""
+    TRACE_LAST_STEP = 8
 
     @SeaOfStarsAW.function_log
     def run_case(self):

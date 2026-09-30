@@ -6,6 +6,7 @@ from cases.wda_case_common import WdaCase
 
 class PerformanceDynamic_happyanimal_0010(WdaCase):
     """启动开心消消乐运行30秒后返回Home页。"""
+    TRACE_LAST_STEP = 2
 
     PACKAGE = 'com.happyelements.1OSAnimal'
     APP_NAME = '开心消消乐'

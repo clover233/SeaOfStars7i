@@ -4,6 +4,7 @@ from cases.deepseek_common import DeepSeekCase
 
 class PerformanceDynamic_deepseek_0010(DeepSeekCase):
     """Excel 7.0.2：连续提问并浏览 DeepSeek 回答。"""
+    TRACE_LAST_STEP = 8
 
     @SeaOfStarsAW.function_log
     def run_case(self):

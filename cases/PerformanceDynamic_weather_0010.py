@@ -4,12 +4,13 @@ from cases.weather_common import WeatherCase
 
 class PerformanceDynamic_weather_0010(WeatherCase):
     """天气主页和城市切换（以用户补充的8步为准）。"""
+    TRACE_LAST_STEP = 8
 
     @SeaOfStarsAW.function_log
     def run_case(self):
         for iteration in range(self.TEST_TIME):
             self.prepare_iteration()
-            with self.capture_trace_5s(iteration, 1):
+            with self.capture_trace(iteration, 1):
                 self.step(1, '启动天气')
                 self.start_weather()
             self.step(2, '主页浏览，上下各滑动5次')
@@ -24,6 +25,6 @@ class PerformanceDynamic_weather_0010(WeatherCase):
             self.switch_cities(left=5, right=5, repeats=5)
             self.step(7, '返回天气主界面')
             self.return_main()
-            with self.capture_trace_5s(iteration, 8):
+            with self.capture_trace(iteration, 8):
                 self.step(8, '滑动返回Home页')
                 self.launcher()

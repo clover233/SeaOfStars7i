@@ -2,7 +2,6 @@
 
 import logging
 import time
-from contextlib import contextmanager
 
 from cases.wda_case_common import WdaCase
 
@@ -10,15 +9,6 @@ from cases.wda_case_common import WdaCase
 class WpsOfficeCase(WdaCase):
     PACKAGE = 'com.kingsoft.www.office.wpsoffice'
     APP_NAME = 'WPS Office'
-
-    @contextmanager
-    def capture_trace_5s(self, iteration, step_number):
-        with self.capture_trace(iteration, step_number):
-            started_at = time.monotonic()
-            try:
-                yield
-            finally:
-                time.sleep(max(0, 5 - (time.monotonic() - started_at)))
 
     def _enable_continuous_ui_mode(self):
         self._previous_idle_settings = None

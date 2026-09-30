@@ -4,12 +4,13 @@ from cases.tencentnews_common import TencentNewsCase
 
 class PerformanceDynamic_tencentnews_0010(TencentNewsCase):
     """Excel 7.0.2：腾讯新闻首页和新闻详情浏览。"""
+    TRACE_LAST_STEP = 6
 
     @SeaOfStarsAW.function_log
     def run_case(self):
         for iteration in range(self.TEST_TIME):
             self.prepare_iteration()
-            with self.capture_trace_5s(iteration, 1):
+            with self.capture_trace(iteration, 1):
                 self.step(1, '启动腾讯新闻')
                 self.start_tencentnews()
             self.step(2, '首页浏览，上滑5次，下滑5次')
@@ -20,6 +21,6 @@ class PerformanceDynamic_tencentnews_0010(TencentNewsCase):
             self.open_first_news()
             self.step(5, '新闻页面上滑2次，下滑2次')
             self.browse(2, 2)
-            with self.capture_trace_5s(iteration, 6):
+            with self.capture_trace(iteration, 6):
                 self.step(6, '滑动返回Home页')
                 self.launcher()

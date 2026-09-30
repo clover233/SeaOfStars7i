@@ -4,12 +4,13 @@ from cases.wpsoffice_common import WpsOfficeCase
 
 class PerformanceDynamic_wpsoffice_0010(WpsOfficeCase):
     """WPS 首页、云盘、设置、会员页和欢迎文档浏览。"""
+    TRACE_LAST_STEP = 13
 
     @SeaOfStarsAW.function_log
     def run_case(self):
         for iteration in range(self.TEST_TIME):
             self.prepare_iteration()
-            with self.capture_trace_5s(iteration, 1):
+            with self.capture_trace(iteration, 1):
                 self.step(1, '启动WPS')
                 self.start_wps()
             self.step(2, '首页左右滑动各5次')
@@ -35,6 +36,6 @@ class PerformanceDynamic_wpsoffice_0010(WpsOfficeCase):
             self.step(12, '返回WPS主界面')
             self.back_from_document()
             self.return_home()
-            with self.capture_trace_5s(iteration, 13):
+            with self.capture_trace(iteration, 13):
                 self.step(13, '滑动返回Home页')
                 self.launcher()

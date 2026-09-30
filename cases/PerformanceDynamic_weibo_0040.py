@@ -4,12 +4,13 @@ from cases.weibo_common import WeiboCase
 
 class PerformanceDynamic_weibo_0040(WeiboCase):
     """微博用户搜索和九图草稿编辑（不发布）。"""
+    TRACE_LAST_STEP = 18
 
     @SeaOfStarsAW.function_log
     def run_case(self):
         for iteration in range(self.TEST_TIME):
             self.prepare_iteration()
-            with self.capture_trace_5s(iteration, 1):
+            with self.capture_trace(iteration, 1):
                 self.step(1, '启动微博')
                 self.start_weibo()
             self.step(2, '点击屏幕底部发现')
@@ -41,6 +42,6 @@ class PerformanceDynamic_weibo_0040(WeiboCase):
             self.next_photo_step()
             self.step(17, '返回微博主界面（放弃草稿，不发布）')
             self.abandon_compose_and_return_home()
-            with self.capture_trace_5s(iteration, 18):
+            with self.capture_trace(iteration, 18):
                 self.step(18, '滑动返回Home页')
                 self.launcher()

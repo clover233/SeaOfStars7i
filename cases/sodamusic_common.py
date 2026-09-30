@@ -2,7 +2,6 @@
 
 import logging
 import time
-from contextlib import contextmanager
 
 from cases.wda_case_common import WdaCase
 
@@ -16,16 +15,6 @@ class SodaMusicCase(WdaCase):
     PLAYER_BUTTON = (201, 819)
     PLAYLIST_BUTTON = (366, 724)
     SEARCH_BUTTON = (369, 84)
-
-    @contextmanager
-    def capture_trace_5s(self, iteration, step_number):
-        """只在首尾步骤采集，并保证采样窗口不少于 5 秒。"""
-        with self.capture_trace(iteration, step_number):
-            started_at = time.monotonic()
-            try:
-                yield
-            finally:
-                time.sleep(max(0, 5 - (time.monotonic() - started_at)))
 
     def prepare_iteration(self):
         try:

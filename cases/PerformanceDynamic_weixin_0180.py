@@ -4,12 +4,13 @@ from cases.weixin_common import WeixinCase
 
 class PerformanceDynamic_weixin_0180(WeixinCase):
     """Excel 7.0.2：同程旅行火车票结果及日期页面浏览。"""
+    TRACE_LAST_STEP = 10
 
     @SeaOfStarsAW.function_log
     def run_case(self):
         for iteration in range(self.TEST_TIME):
             self.prepare_iteration()
-            with self.capture_trace_5s(iteration, 1):
+            with self.capture_trace(iteration, 1):
                 self.step(1, '启动微信')
                 self.start_weixin()
             self.finish_weixin_start()
@@ -29,6 +30,6 @@ class PerformanceDynamic_weixin_0180(WeixinCase):
             self.tongcheng_return_home()
             self.step(9, '返回微信主界面')
             self.close_mini_program()
-            with self.capture_trace_5s(iteration, 10):
+            with self.capture_trace(iteration, 10):
                 self.step(10, '滑动返回Home页')
                 self.launcher()

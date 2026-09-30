@@ -4,12 +4,13 @@ from cases.tielu12306_common import Tielu12306Case
 
 class PerformanceDynamic_tielu12306_0010(Tielu12306Case):
     """Excel 7.0.2：铁路12306车票结果和排序浏览。"""
+    TRACE_LAST_STEP = 11
 
     @SeaOfStarsAW.function_log
     def run_case(self):
         for iteration in range(self.TEST_TIME):
             self.prepare_iteration()
-            with self.capture_trace_5s(iteration, 1):
+            with self.capture_trace(iteration, 1):
                 self.step(1, '启动铁路12306')
                 self.start_tielu12306()
             self.step(2, '向上抛滑1次，浏览首页')
@@ -31,6 +32,6 @@ class PerformanceDynamic_tielu12306_0010(Tielu12306Case):
             self.select_result_sort('价格最低')
             self.step(10, '返回铁路12306主界面')
             self.return_home()
-            with self.capture_trace_5s(iteration, 11):
+            with self.capture_trace(iteration, 11):
                 self.step(11, '滑动返回Home页')
                 self.launcher()

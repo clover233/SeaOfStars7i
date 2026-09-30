@@ -4,12 +4,13 @@ from cases.uc_common import UcCase
 
 class PerformanceDynamic_uc_0010(UcCase):
     """Excel 7.0.2：UC 浏览器频道和新闻浏览。"""
+    TRACE_LAST_STEP = 12
 
     @SeaOfStarsAW.function_log
     def run_case(self):
         for iteration in range(self.TEST_TIME):
             self.prepare_iteration()
-            with self.capture_trace_5s(iteration, 1):
+            with self.capture_trace(iteration, 1):
                 self.step(1, '启动UC浏览器')
                 self.start_uc()
             self.step(2, '左滑5次切换顶部tab栏')
@@ -32,6 +33,6 @@ class PerformanceDynamic_uc_0010(UcCase):
             self.return_home()
             self.step(11, '浏览首页，上下各滑动5次')
             self.browse(5, 5)
-            with self.capture_trace_5s(iteration, 12):
+            with self.capture_trace(iteration, 12):
                 self.step(12, '滑动返回Home页')
                 self.launcher()

@@ -7,6 +7,7 @@ from cases.wda_case_common import WdaCase
 
 class PerformanceDynamic_meituxiuxiu_0010(WdaCase):
     """Excel 7.0.2：导入图片、拍照并分别完成调色保存。"""
+    TRACE_LAST_STEP = 19
 
     PACKAGE = 'com.meitu.mtxx'
     APP_NAME = '美图秀秀'

@@ -3,6 +3,8 @@ from cases.alipay_common import AlipayCase
 
 
 class PerformanceDynamic_alipay_0070(AlipayCase):
+    TRACE_LAST_STEP = 15
+
     @SeaOfStarsAW.function_log
     def run_case(self):
         for iteration in range(self.TEST_TIME):

@@ -4,12 +4,13 @@ from cases.taobao_common import TaobaoCase
 
 class PerformanceDynamic_taobao_0020(TaobaoCase):
     """Excel 7.0.2：淘宝首页频道、视频和订单浏览。"""
+    TRACE_LAST_STEP = 15
 
     @SeaOfStarsAW.function_log
     def run_case(self):
         for iteration in range(self.TEST_TIME):
             self.prepare_iteration()
-            with self.capture_trace_5s(iteration, 1):
+            with self.capture_trace(iteration, 1):
                 self.step(1, '启动淘宝')
                 self.start_taobao()
             self.step(2, '点击推荐，切换到推荐页面')
@@ -40,6 +41,6 @@ class PerformanceDynamic_taobao_0020(TaobaoCase):
             self.horizontal_browse(5, 0)
             self.step(14, '返回淘宝主界面')
             self.return_home()
-            with self.capture_trace_5s(iteration, 15):
+            with self.capture_trace(iteration, 15):
                 self.step(15, '滑动返回Home页')
                 self.launcher()

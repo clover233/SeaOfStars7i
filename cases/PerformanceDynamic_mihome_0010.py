@@ -4,6 +4,7 @@ from cases.mihome_common import MiHomeCase
 
 class PerformanceDynamic_mihome_0010(MiHomeCase):
     """Excel 7.0.2：浏览米家产品、智能并进入添加设备。"""
+    TRACE_LAST_STEP = 10
 
     @SeaOfStarsAW.function_log
     def run_case(self):

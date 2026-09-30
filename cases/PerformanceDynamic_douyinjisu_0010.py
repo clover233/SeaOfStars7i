@@ -4,6 +4,7 @@ from cases.douyinjisu_common import DouyinJisuCase
 
 class PerformanceDynamic_douyinjisu_0010(DouyinJisuCase):
     """Excel 7.0.2：抖音极速版推荐、视频、作者主页与评论浏览。"""
+    TRACE_LAST_STEP = 11
 
     @SeaOfStarsAW.function_log
     def run_case(self):

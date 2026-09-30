@@ -4,6 +4,7 @@ from cases.dianping_common import DianpingCase
 
 class PerformanceDynamic_dazhongdianping_0020(DianpingCase):
     """浏览大众点评首页的美食、景点游玩和休闲玩乐分类。"""
+    TRACE_LAST_STEP = 10
 
     @SeaOfStarsAW.function_log
     def run_case(self):

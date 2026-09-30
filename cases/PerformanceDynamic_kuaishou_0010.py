@@ -4,12 +4,13 @@ from cases.kuaishou_common import KuaishouCase
 
 class PerformanceDynamic_kuaishou_0010(KuaishouCase):
     """Excel 7.0.2：精选视频、评论、点赞和收藏。"""
+    TRACE_LAST_STEP = 7
 
     @SeaOfStarsAW.function_log
     def run_case(self):
         for iteration in range(self.TEST_TIME):
             self.prepare_iteration()
-            with self.capture_trace_5s(iteration, 1):
+            with self.capture_trace(iteration, 1):
                 self.step(1, '启动快手')
                 self.start_app(wait=5)
             self.normalize_featured_after_launch()
@@ -24,6 +25,6 @@ class PerformanceDynamic_kuaishou_0010(KuaishouCase):
             self.like_current_video()
             self.step(6, '点击收藏')
             self.collect_current_video()
-            with self.capture_trace_5s(iteration, 7):
+            with self.capture_trace(iteration, 7):
                 self.step(7, '滑动返回Home页')
                 self.launcher()

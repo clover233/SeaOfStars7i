@@ -6,6 +6,7 @@ from cases.autonavi_common import AutonaviCase
 
 class PerformanceDynamic_autonavi_0060(AutonaviCase):
     """Excel 7.0.2：导航期间切换小红书和抖音。"""
+    TRACE_LAST_STEP = 27
 
     all_app_package_list = [
         AutonaviCase.PACKAGE,

@@ -6,6 +6,7 @@ from cases.alipay_common import AlipayCase
 
 class PerformanceDynamic_alipay_0030(AlipayCase):
     """Excel 7.0.2 模型：支付宝搜索闪送并浏览小程序。"""
+    TRACE_LAST_STEP = 10
 
     def require_shansong_page(self, *anchors):
         for _ in range(6):

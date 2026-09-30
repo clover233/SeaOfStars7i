@@ -3,7 +3,6 @@
 import logging
 import re
 import time
-from contextlib import contextmanager
 
 from cases.wda_case_common import WdaCase
 
@@ -11,16 +10,6 @@ from cases.wda_case_common import WdaCase
 class XhsCase(WdaCase):
     PACKAGE = 'com.xingin.discover'
     APP_NAME = '小红书'
-
-    @contextmanager
-    def capture_trace_5s(self, iteration, step_number):
-        """只采集首尾步骤，并保证每段 trace 不少于 5 秒。"""
-        with self.capture_trace(iteration, step_number):
-            started_at = time.monotonic()
-            try:
-                yield
-            finally:
-                time.sleep(max(0, 5 - (time.monotonic() - started_at)))
 
     def _enable_continuous_ui_mode(self):
         self._previous_idle_settings = None

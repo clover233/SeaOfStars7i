@@ -4,6 +4,7 @@ from cases.baidu_common import BaiduMapCase
 
 class PerformanceDynamic_baidumap_0010(BaiduMapCase):
     """Excel 7.0.2：百度地图导航至西安钟楼。"""
+    TRACE_LAST_STEP = 8
 
     @SeaOfStarsAW.function_log
     def run_case(self):

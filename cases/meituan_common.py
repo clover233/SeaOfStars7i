@@ -2,7 +2,6 @@
 
 import logging
 import time
-from contextlib import contextmanager
 
 from cases.wda_case_common import WdaCase
 
@@ -10,16 +9,6 @@ from cases.wda_case_common import WdaCase
 class MeituanCase(WdaCase):
     PACKAGE = 'com.meituan.imeituan'
     APP_NAME = '美团'
-
-    @contextmanager
-    def capture_trace_5s(self, iteration, step_number):
-        """只采集指定首尾步骤，并保证每段 trace 不少于 5 秒。"""
-        with self.capture_trace(iteration, step_number):
-            started_at = time.monotonic()
-            try:
-                yield
-            finally:
-                time.sleep(max(0, 5 - (time.monotonic() - started_at)))
 
     def prepare_iteration(self):
         """冷启动前清理进程；该动作位于首个 trace 之外。"""

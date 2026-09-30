@@ -2,7 +2,6 @@
 
 import logging
 import time
-from contextlib import contextmanager
 
 from cases.wda_case_common import WdaCase
 
@@ -10,16 +9,6 @@ from cases.wda_case_common import WdaCase
 class Tielu12306Case(WdaCase):
     PACKAGE = 'cn.12306.rails12306'
     APP_NAME = '铁路12306'
-
-    @contextmanager
-    def capture_trace_5s(self, iteration, step_number):
-        """只在首尾步骤采集，并保证采样窗口不少于 5 秒。"""
-        with self.capture_trace(iteration, step_number):
-            started_at = time.monotonic()
-            try:
-                yield
-            finally:
-                time.sleep(max(0, 5 - (time.monotonic() - started_at)))
 
     def _enable_continuous_ui_mode(self):
         """首页轮播和 H5 页持续刷新时不等待 XCTest 进入 idle。"""

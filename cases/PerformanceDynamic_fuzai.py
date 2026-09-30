@@ -5,6 +5,8 @@ from cases.CaseBase import Case
 
 
 class PerformanceDynamic_fuzai(Case):
+    TRACE_LAST_STEP = 16
+
     all_app_package_list = ['']
     TEST_TIME = 1
 
@@ -21,7 +23,7 @@ class PerformanceDynamic_fuzai(Case):
 
     @SeaOfStarsAW.function_log
     def run_case(self):
-        """按顺序打开16个应用，每个应用动作各采集一份 trace。"""
+        """按顺序打开16个应用，在第1、8、16步采集 trace。"""
         logging.info("用例开始执行")
         if SeaOfStarsAW.ut_device.locked():
             SeaOfStarsAW.ut_device.unlock()
@@ -45,23 +47,17 @@ class PerformanceDynamic_fuzai(Case):
             'yyvoice',
             'com.kiloo.subwaysurf.cn',
         ]
-        if SeaOfStarsAW.trace_thread is None:
-            SeaOfStarsAW.start_trace_thread()
         for iteration in range(self.TEST_TIME):
             for step_number, package in enumerate(app_packages, 1):
                 step_text = '{}、启动 {}'.format(step_number, package)
                 try:
-                    SeaOfStarsAW.start_trace(
-                        self.trace_dir_path,
-                        self.__class__.__name__,
-                        'step_{}'.format(step_number),
-                        self.screenshot_dir_path,
-                    )
+                    self._start_step_trace(step_number)
                     logging.info(step_text)
-                    SeaOfStarsAW.trace_thread.add_log('负载', step_text)
+                    if self._trace_active:
+                        SeaOfStarsAW.trace_thread.add_log('负载', step_text)
                     SeaOfStarsAW.ut_device.app_activate(package)
                     time.sleep(3)
                     SeaOfStarsAW.ut_device.home()
                 finally:
-                    SeaOfStarsAW.stop_trace()
+                    self._stop_step_trace()
         logging.info('用例执行结束')

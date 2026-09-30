@@ -3,7 +3,6 @@
 import logging
 import re
 import time
-from contextlib import contextmanager
 
 from cases.wda_case_common import WdaCase
 
@@ -11,16 +10,6 @@ from cases.wda_case_common import WdaCase
 class PhotoCase(WdaCase):
     PACKAGE = 'com.apple.mobileslideshow'
     APP_NAME = '照片'
-
-    @contextmanager
-    def capture_trace_5s(self, iteration, step_number):
-        """Capture only the requested step and keep each trace at least 5 seconds."""
-        with self.capture_trace(iteration, step_number):
-            started_at = time.monotonic()
-            try:
-                yield
-            finally:
-                time.sleep(max(0, 5 - (time.monotonic() - started_at)))
 
     def prepare_iteration(self):
         try:

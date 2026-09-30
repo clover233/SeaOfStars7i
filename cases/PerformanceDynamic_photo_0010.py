@@ -6,12 +6,13 @@ from cases.photo_common import PhotoCase
 
 class PerformanceDynamic_photo_0010(PhotoCase):
     """Excel 7.0.2: browse the Photos library and inspect photos."""
+    TRACE_LAST_STEP = 17
 
     @SeaOfStarsAW.function_log
     def run_case(self):
         for iteration in range(self.TEST_TIME):
             self.prepare_iteration()
-            with self.capture_trace_5s(iteration, 1):
+            with self.capture_trace(iteration, 1):
                 self.step(1, '启动图库')
                 self.start_photos()
 
@@ -74,6 +75,6 @@ class PerformanceDynamic_photo_0010(PhotoCase):
             self.leave_one_up()
             self.return_to_library_main()
 
-            with self.capture_trace_5s(iteration, 17):
+            with self.capture_trace(iteration, 17):
                 self.step(17, '滑动返回 Home 页')
                 self.launcher()

@@ -4,6 +4,7 @@ from cases.autonavi_common import AutonaviCase
 
 class PerformanceDynamic_autonavi_0040(AutonaviCase):
     """Excel 7.0.2：浏览美食搜索结果并进入导航。"""
+    TRACE_LAST_STEP = 12
 
     @SeaOfStarsAW.function_log
     def run_case(self):

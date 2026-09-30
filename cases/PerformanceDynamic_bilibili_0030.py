@@ -6,6 +6,7 @@ from cases.bilibili_common import BilibiliCase
 
 class PerformanceDynamic_bilibili_0030(BilibiliCase):
     """Excel 7.0.2：播放视频、发送弹幕并浏览评论。"""
+    TRACE_LAST_STEP = 16
 
     @SeaOfStarsAW.function_log
     def run_case(self):

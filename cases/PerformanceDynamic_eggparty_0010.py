@@ -4,6 +4,7 @@ from cases.wda_case_common import WdaCase
 
 class PerformanceDynamic_eggparty_0010(WdaCase):
     """Excel 7.0.2：启动蛋仔派对后返回桌面。"""
+    TRACE_LAST_STEP = 2
 
     PACKAGE = 'com.netease.party'
     APP_NAME = '蛋仔派对'

@@ -4,12 +4,13 @@ from cases.weixin_common import WeixinCase
 
 class PerformanceDynamic_weixin_0020(WeixinCase):
     """Excel 7.0.2：添加朋友、朋友圈评论及九图选择。"""
+    TRACE_LAST_STEP = 14
 
     @SeaOfStarsAW.function_log
     def run_case(self):
         for iteration in range(self.TEST_TIME):
             self.prepare_iteration()
-            with self.capture_trace_5s(iteration, 1):
+            with self.capture_trace(iteration, 1):
                 self.step(1, '启动微信')
                 self.start_weixin()
             self.finish_weixin_start()
@@ -46,6 +47,6 @@ class PerformanceDynamic_weixin_0020(WeixinCase):
             self.tap('关闭', '取消', max_y=140, wait=2)
             self.step(13, '返回微信主界面')
             self.return_weixin_home()
-            with self.capture_trace_5s(iteration, 14):
+            with self.capture_trace(iteration, 14):
                 self.step(14, '滑动返回Home页')
                 self.launcher()

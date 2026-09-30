@@ -4,12 +4,13 @@ from cases.setting_common import SettingCase
 
 class PerformanceDynamic_setting_0010(SettingCase):
     """将 Android/华为设置步骤映射为不改变配置的 iOS 等价浏览。"""
+    TRACE_LAST_STEP = 36
 
     @SeaOfStarsAW.function_log
     def run_case(self):
         for iteration in range(self.TEST_TIME):
             self.prepare_iteration()
-            with self.capture_trace_5s(iteration, 1):
+            with self.capture_trace(iteration, 1):
                 self.step(1, '启动设置')
                 self.start_settings()
 
@@ -120,6 +121,6 @@ class PerformanceDynamic_setting_0010(SettingCase):
             self.step(35, '返回设置主界面')
             self.return_to_root()
 
-            with self.capture_trace_5s(iteration, 36):
+            with self.capture_trace(iteration, 36):
                 self.step(36, '滑动返回 Home 页')
                 self.launcher()

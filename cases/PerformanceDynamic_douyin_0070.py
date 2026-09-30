@@ -4,12 +4,13 @@ from cases.douyin_common import DouyinCase
 
 class PerformanceDynamic_douyin_0070(DouyinCase):
     """Excel 7.0.2：浏览个人收藏、喜欢作品和我的钱包。"""
+    TRACE_LAST_STEP = 13
 
     @SeaOfStarsAW.function_log
     def run_case(self):
         for iteration in range(self.TEST_TIME):
             self.prepare_iteration()
-            with self.capture_trace_5s(iteration, 1):
+            with self.capture_trace(iteration, 1):
                 self.step(1, '启动抖音')
                 self.start_app(wait=5)
             self.normalize_home_after_launch()
@@ -35,6 +36,6 @@ class PerformanceDynamic_douyin_0070(DouyinCase):
             self.open_wallet()
             self.step(12, '返回抖音主界面')
             self.return_main()
-            with self.capture_trace_5s(iteration, 13):
+            with self.capture_trace(iteration, 13):
                 self.step(13, '滑动返回Home页')
                 self.launcher()

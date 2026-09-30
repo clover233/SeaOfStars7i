@@ -7,6 +7,7 @@ from cases.douyin_common import DouyinCase
 
 class PerformanceDynamic_douyin_0040(DouyinCase):
     """Excel 7.0.2：浏览推荐视频作者和华为终端 UP 主主页。"""
+    TRACE_LAST_STEP = 20
 
     def _browse_current_author_once(self):
         self.swipe_up_times(5)

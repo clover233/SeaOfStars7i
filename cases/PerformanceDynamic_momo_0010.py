@@ -4,6 +4,7 @@ from cases.momo_common import MomoCase
 
 class PerformanceDynamic_momo_0010(MomoCase):
     """Excel 7.0.2：浏览陌陌首页、直播及各底部页面。"""
+    TRACE_LAST_STEP = 11
 
     @SeaOfStarsAW.function_log
     def run_case(self):

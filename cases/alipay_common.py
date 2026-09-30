@@ -5,7 +5,6 @@ import os
 import re
 import time
 import xml.etree.ElementTree as ET
-from contextlib import contextmanager
 
 from aw import SeaOfStarsAW
 from cases.CaseBase import Case
@@ -22,36 +21,6 @@ class AlipayCase(Case):
         SeaOfStarsAW.current_running_class_name = self.__class__.__name__
         self.current_step = '准备环境'
         self._has_step = False
-        self._trace_active = False
-        self._trace_iteration = 0
-        self._trace_step_number = None
-
-    @contextmanager
-    def capture_trace(self, iteration, step_number):
-        """记录当前轮次，并在显式上下文结束时收尾当前步骤。"""
-        self._trace_iteration = iteration
-        if step_number == 1:
-            self._has_step = False
-        try:
-            yield
-        finally:
-            if self._trace_active and self._trace_step_number == step_number:
-                SeaOfStarsAW.stop_trace()
-                self._trace_active = False
-                self._trace_step_number = None
-
-    def _start_step_trace(self, step_number):
-        """为每个用例步骤单独生成一份 trace 日志。"""
-        if SeaOfStarsAW.trace_thread is None:
-            SeaOfStarsAW.start_trace_thread()
-        if self._trace_active:
-            SeaOfStarsAW.stop_trace()
-        SeaOfStarsAW.start_trace(
-            self.trace_dir_path, self.__class__.__name__,
-            'step_{}'.format(step_number),
-            self.screenshot_dir_path)
-        self._trace_active = True
-        self._trace_step_number = step_number
 
     @property
     def device(self):
@@ -64,13 +33,15 @@ class AlipayCase(Case):
         return True
 
     def step(self, number, text):
+        self._stop_step_trace()
         if self._has_step:
             time.sleep(self.STEP_INTERVAL)
         self._has_step = True
         self._start_step_trace(number)
         self.current_step = '{}、{}'.format(number, text)
         logging.info(self.current_step)
-        SeaOfStarsAW.trace_thread.add_log('支付宝', self.current_step)
+        if self._trace_active:
+            SeaOfStarsAW.trace_thread.add_log('支付宝', self.current_step)
 
     def fail(self, message):
         path = os.path.join(self.screenshot_dir_path, 'step_{}_failed.png'.format(

@@ -6,6 +6,7 @@ from cases.fanqie_common import FanqieCase
 
 class PerformanceDynamic_fanqie_0010(FanqieCase):
     """Excel 7.0.2：浏览首页并反复阅读《长生不死》。"""
+    TRACE_LAST_STEP = 7
 
     @SeaOfStarsAW.function_log
     def run_case(self):

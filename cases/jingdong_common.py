@@ -1,7 +1,6 @@
 """京东动态性能用例的 WDA 页面能力。"""
 import logging
 import time
-from contextlib import contextmanager
 
 from cases.wda_case_common import WdaCase
 
@@ -10,15 +9,6 @@ class JingdongCase(WdaCase):
     PACKAGE = 'com.360buy.jdmobile'
     APP_NAME = '京东'
     SOURCE_TIMEOUT = 30
-
-    @contextmanager
-    def capture_trace_5s(self, iteration, step_number):
-        with self.capture_trace(iteration, step_number):
-            started_at = time.monotonic()
-            try:
-                yield
-            finally:
-                time.sleep(max(0, 5 - (time.monotonic() - started_at)))
 
     def _enable_continuous_ui_mode(self):
         """直播和商品详情持续动画时不等待 XCTest idle。"""

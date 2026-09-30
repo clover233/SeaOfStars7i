@@ -4,6 +4,7 @@ from cases.dongchedi_common import DongchediCase
 
 class PerformanceDynamic_dongchedi_0010(DongchediCase):
     """Excel 7.0.2：懂车帝推荐、搜索、图片与热榜浏览。"""
+    TRACE_LAST_STEP = 17
 
     @SeaOfStarsAW.function_log
     def run_case(self):

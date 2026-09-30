@@ -4,12 +4,13 @@ from cases.weipinhui_common import WeipinhuiCase
 
 class PerformanceDynamic_weipinhui_0010(WeipinhuiCase):
     """唯品会搜索、商品、店铺、购物车与结算浏览。"""
+    TRACE_LAST_STEP = 15
 
     @SeaOfStarsAW.function_log
     def run_case(self):
         for iteration in range(self.TEST_TIME):
             self.prepare_iteration()
-            with self.capture_trace_5s(iteration, 1):
+            with self.capture_trace(iteration, 1):
                 self.step(1, '启动唯品会')
                 self.start_weipinhui()
             self.step(2, '搜索清风卫生纸')
@@ -39,6 +40,6 @@ class PerformanceDynamic_weipinhui_0010(WeipinhuiCase):
             self.delete_revealed_cart_item()
             self.step(14, '返回唯品会主界面')
             self.return_home()
-            with self.capture_trace_5s(iteration, 15):
+            with self.capture_trace(iteration, 15):
                 self.step(15, '滑动返回Home页')
                 self.launcher()

@@ -4,6 +4,7 @@ from cases.photo_common import PhotoCase
 
 class PerformanceDynamic_photo_0030(PhotoCase):
     """Excel 7.0.2: browse media, create an album, then remove it."""
+    TRACE_LAST_STEP = 17
 
     ALBUM_NAME = '动态测试'
 
@@ -11,7 +12,7 @@ class PerformanceDynamic_photo_0030(PhotoCase):
     def run_case(self):
         for iteration in range(self.TEST_TIME):
             self.prepare_iteration()
-            with self.capture_trace_5s(iteration, 1):
+            with self.capture_trace(iteration, 1):
                 self.step(1, '启动图库')
                 self.start_photos()
 
@@ -70,6 +71,6 @@ class PerformanceDynamic_photo_0030(PhotoCase):
             self.step(16, '返回图库主界面')
             self.return_to_library_main()
 
-            with self.capture_trace_5s(iteration, 17):
+            with self.capture_trace(iteration, 17):
                 self.step(17, '滑动返回 Home 页')
                 self.launcher()

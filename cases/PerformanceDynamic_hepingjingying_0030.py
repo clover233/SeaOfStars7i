@@ -6,6 +6,7 @@ from cases.wda_case_common import WdaCase
 
 class PerformanceDynamic_hepingjingying_0030(WdaCase):
     """启动和平精英运行30秒后返回Home页。"""
+    TRACE_LAST_STEP = 2
 
     PACKAGE = 'com.tencent.tmgp.pubgmhd'
     APP_NAME = '和平精英'

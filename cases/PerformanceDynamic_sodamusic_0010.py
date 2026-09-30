@@ -4,12 +4,13 @@ from cases.sodamusic_common import SodaMusicCase
 
 class PerformanceDynamic_sodamusic_0010(SodaMusicCase):
     """Excel 7.0.2：汽水音乐搜索、播放和歌单浏览。"""
+    TRACE_LAST_STEP = 12
 
     @SeaOfStarsAW.function_log
     def run_case(self):
         for iteration in range(self.TEST_TIME):
             self.prepare_iteration()
-            with self.capture_trace_5s(iteration, 1):
+            with self.capture_trace(iteration, 1):
                 self.step(1, '启动汽水音乐')
                 self.start_sodamusic()
             self.step(2, '点击右上角搜索')
@@ -32,6 +33,6 @@ class PerformanceDynamic_sodamusic_0010(SodaMusicCase):
             self.open_playlist()
             self.step(11, '返回汽水音乐主界面')
             self.close_playlist()
-            with self.capture_trace_5s(iteration, 12):
+            with self.capture_trace(iteration, 12):
                 self.step(12, '滑动返回Home页')
                 self.launcher()

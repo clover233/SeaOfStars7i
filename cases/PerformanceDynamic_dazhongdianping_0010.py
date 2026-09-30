@@ -4,6 +4,7 @@ from cases.dianping_common import DianpingCase
 
 class PerformanceDynamic_dazhongdianping_0010(DianpingCase):
     """Excel 7.0.2：搜索烧烤商铺并浏览详情和评价。"""
+    TRACE_LAST_STEP = 14
 
     @SeaOfStarsAW.function_log
     def run_case(self):

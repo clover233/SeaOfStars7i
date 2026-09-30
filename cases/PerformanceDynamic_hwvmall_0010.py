@@ -4,12 +4,13 @@ from cases.hwvmall_common import HuaweiMallCase
 
 class PerformanceDynamic_hwvmall_0010(HuaweiMallCase):
     """Excel 7.0.2：轮播图、搜索和商品详情浏览。"""
+    TRACE_LAST_STEP = 14
 
     @SeaOfStarsAW.function_log
     def run_case(self):
         for iteration in range(self.TEST_TIME):
             self.prepare_iteration()
-            with self.capture_trace_5s(iteration, 1):
+            with self.capture_trace(iteration, 1):
                 self.step(1, '启动华为商城')
                 self.start_app(wait=5)
             self.normalize_home_after_launch()
@@ -48,6 +49,6 @@ class PerformanceDynamic_hwvmall_0010(HuaweiMallCase):
             self.return_home()
             self.step(13, '华为商城首页上滑6次，下滑6次')
             self.browse(up=6, down=6)
-            with self.capture_trace_5s(iteration, 14):
+            with self.capture_trace(iteration, 14):
                 self.step(14, '滑动返回Home页')
                 self.launcher()

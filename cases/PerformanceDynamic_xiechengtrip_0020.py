@@ -4,12 +4,13 @@ from cases.xiechengtrip_common import XiechengTripCase
 
 class PerformanceDynamic_xiechengtrip_0020(XiechengTripCase):
     """携程机票和火车票结果浏览。"""
+    TRACE_LAST_STEP = 13
 
     @SeaOfStarsAW.function_log
     def run_case(self):
         for iteration in range(self.TEST_TIME):
             self.prepare_iteration()
-            with self.capture_trace_5s(iteration, 1):
+            with self.capture_trace(iteration, 1):
                 self.step(1, '启动携程旅行')
                 self.start_xiecheng()
 
@@ -36,6 +37,6 @@ class PerformanceDynamic_xiechengtrip_0020(XiechengTripCase):
             self.step(12, '返回携程旅行主界面')
             self.return_home()
 
-            with self.capture_trace_5s(iteration, 13):
+            with self.capture_trace(iteration, 13):
                 self.step(13, '滑动返回Home页')
                 self.launcher()

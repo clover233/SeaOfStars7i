@@ -4,12 +4,13 @@ from cases.zuoyebang_common import ZuoyebangCase
 
 class PerformanceDynamic_zuoyebang_0010(ZuoyebangCase):
     """作业帮首页、拍照、练习、VIP 和学习好物浏览。"""
+    TRACE_LAST_STEP = 15
 
     @SeaOfStarsAW.function_log
     def run_case(self):
         for iteration in range(self.TEST_TIME):
             self.prepare_iteration()
-            with self.capture_trace_5s(iteration, 1):
+            with self.capture_trace(iteration, 1):
                 self.step(1, '启动作业帮')
                 self.start_zuoyebang()
 
@@ -40,6 +41,6 @@ class PerformanceDynamic_zuoyebang_0010(ZuoyebangCase):
             self.step(14, '返回作业帮主界面')
             self.return_home()
 
-            with self.capture_trace_5s(iteration, 15):
+            with self.capture_trace(iteration, 15):
                 self.step(15, '滑动返回Home页')
                 self.launcher()

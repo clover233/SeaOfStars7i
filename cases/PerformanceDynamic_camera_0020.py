@@ -4,6 +4,7 @@ from cases.camera_common import CameraCase
 
 class PerformanceDynamic_camera_0020(CameraCase):
     """Excel 7.0.2：按多个焦段拍照并浏览相机控制和图库。"""
+    TRACE_LAST_STEP = 23
 
     @SeaOfStarsAW.function_log
     def run_case(self):

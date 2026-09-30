@@ -6,6 +6,7 @@ from cases.dingding_common import DingTalkCase
 
 class PerformanceDynamic_dingding_0020(DingTalkCase):
     """Excel 7.0.2：钉钉发起会议，切换头条浏览后返回结束会议。"""
+    TRACE_LAST_STEP = 25
 
     @SeaOfStarsAW.function_log
     def run_case(self):

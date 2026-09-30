@@ -6,6 +6,7 @@ from cases.wda_case_common import WdaCase
 
 class PerformanceDynamic_qianwen_0010(WdaCase):
     """Excel 7.0.2：连续向千问提问三次并浏览回答。"""
+    TRACE_LAST_STEP = 9
 
     PACKAGE = 'com.aliyun.ios.tongyi'
     APP_NAME = '千问'

@@ -4,12 +4,13 @@ from cases.weixin_common import WeixinCase
 
 class PerformanceDynamic_weixin_0040(WeixinCase):
     """Excel 7.0.2：文字、语音、表情及音视频通话。"""
+    TRACE_LAST_STEP = 17
 
     @SeaOfStarsAW.function_log
     def run_case(self):
         for iteration in range(self.TEST_TIME):
             self.prepare_iteration()
-            with self.capture_trace_5s(iteration, 1):
+            with self.capture_trace(iteration, 1):
                 self.step(1, '启动微信')
                 self.start_weixin()
             self.finish_weixin_start()
@@ -46,6 +47,6 @@ class PerformanceDynamic_weixin_0040(WeixinCase):
             self.hang_up_call()
             self.step(16, '返回微信主界面')
             self.return_weixin_home()
-            with self.capture_trace_5s(iteration, 17):
+            with self.capture_trace(iteration, 17):
                 self.step(17, '滑动返回Home页')
                 self.launcher()

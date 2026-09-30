@@ -4,6 +4,7 @@ from cases.autonavi_common import AutonaviCase
 
 class PerformanceDynamic_autonavi_0070(AutonaviCase):
     """Excel 7.0.2：开始导航后将高德切至后台。"""
+    TRACE_LAST_STEP = 6
 
     @SeaOfStarsAW.function_log
     def run_case(self):

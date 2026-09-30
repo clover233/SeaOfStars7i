@@ -6,6 +6,7 @@ from cases.wda_case_common import WdaCase
 
 class PerformanceDynamic_fanqiechangting_0010(WdaCase):
     """Excel 7.0.2：搜索、短剧和音乐频道浏览。"""
+    TRACE_LAST_STEP = 11
 
     PACKAGE = 'com.xs.fm'
     APP_NAME = '番茄畅听'

@@ -5,6 +5,8 @@ from cases.wda_case_common import WdaCase
 
 
 class PerformanceDynamic_xianyu_0020(WdaCase):
+    TRACE_LAST_STEP = 4
+
     APP_NAME = '闲鱼'
     STEP_INTERVAL = 0
     all_app_package_list = ['']

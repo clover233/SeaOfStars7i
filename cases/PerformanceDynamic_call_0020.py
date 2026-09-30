@@ -4,6 +4,7 @@ from cases.phone_common import PhoneCase
 
 class PerformanceDynamic_call_0020(PhoneCase):
     """Excel 7.0.2：输入并删除号码后浏览通话记录。"""
+    TRACE_LAST_STEP = 6
 
     @SeaOfStarsAW.function_log
     def run_case(self):

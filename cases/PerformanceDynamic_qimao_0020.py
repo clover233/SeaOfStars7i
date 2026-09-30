@@ -6,6 +6,7 @@ from cases.qimao_common import QimaoCase
 
 class PerformanceDynamic_qimao_0020(QimaoCase):
     """Excel 7.0.2：首页、小说、短剧、分类与搜索综合浏览。"""
+    TRACE_LAST_STEP = 16
 
     @SeaOfStarsAW.function_log
     def run_case(self):

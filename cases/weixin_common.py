@@ -4,7 +4,6 @@ import logging
 import os
 import threading
 import time
-from contextlib import contextmanager
 
 from cases.wda_case_common import WdaCase
 
@@ -37,16 +36,6 @@ class WeixinCase(WdaCase):
     MIXUE_MINI = os.getenv('WEIXIN_MIXUE_MINI', '蜜雪冰城')
     JD_MINI = os.getenv('WEIXIN_JD_MINI', '京东购物丨点外卖领国补')
     TONGCHENG_MINI = os.getenv('WEIXIN_TONGCHENG_MINI', '同程旅行')
-
-    @contextmanager
-    def capture_trace_5s(self, iteration, step_number):
-        """首尾维测点至少采集 5 秒，中间步骤不采集 trace。"""
-        with self.capture_trace(iteration, step_number):
-            started_at = time.monotonic()
-            try:
-                yield
-            finally:
-                time.sleep(max(0, 5 - (time.monotonic() - started_at)))
 
     def _enable_continuous_ui_mode(self):
         self._previous_idle_settings = None
@@ -168,7 +157,7 @@ class WeixinCase(WdaCase):
         self.fail('多次返回后仍未到达微信主界面，请确认账号已登录')
 
     def start_weixin(self):
-        # trace 上下文负责补足到 5 秒；这里不额外等待，避免首步 trace
+        # trace 上下文等待统一的 4 秒采集窗口结束；这里不额外等待，避免首步 trace
         # 因固定 sleep 被拉长。
         self.start_app(wait=0)
 

@@ -5,6 +5,8 @@ from cases.alipay_common import AlipayCase
 
 
 class PerformanceDynamic_alipay_0020(AlipayCase):
+    TRACE_LAST_STEP = 34
+
     # 用户指定的已有聊天对象；换设备时可以通过环境变量修改。
     CHAT_NAME = '子健'
 

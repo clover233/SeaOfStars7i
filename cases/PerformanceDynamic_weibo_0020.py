@@ -6,12 +6,13 @@ from cases.weibo_common import WeiboCase
 
 class PerformanceDynamic_weibo_0020(WeiboCase):
     """微博推荐、关注、直播、超话与视频浏览。"""
+    TRACE_LAST_STEP = 19
 
     @SeaOfStarsAW.function_log
     def run_case(self):
         for iteration in range(self.TEST_TIME):
             self.prepare_iteration()
-            with self.capture_trace_5s(iteration, 1):
+            with self.capture_trace(iteration, 1):
                 self.step(1, '启动微博')
                 self.start_weibo()
             self.step(2, '点击首页')
@@ -51,6 +52,6 @@ class PerformanceDynamic_weibo_0020(WeiboCase):
             self.open_video_after_long_press()
             self.step(18, '点击首页，返回微博主界面')
             self.return_weibo_home()
-            with self.capture_trace_5s(iteration, 19):
+            with self.capture_trace(iteration, 19):
                 self.step(19, '滑动返回Home页')
                 self.launcher()

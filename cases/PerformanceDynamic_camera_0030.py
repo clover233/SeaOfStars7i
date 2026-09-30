@@ -6,6 +6,7 @@ from cases.camera_common import CameraCase
 
 class PerformanceDynamic_camera_0030(CameraCase):
     """Excel 7.0.2：拍照、切换摄像头并录制视频。"""
+    TRACE_LAST_STEP = 18
 
     @SeaOfStarsAW.function_log
     def run_case(self):

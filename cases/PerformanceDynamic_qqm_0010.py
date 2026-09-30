@@ -4,12 +4,13 @@ from cases.qqmusic_common import QqMusicCase
 
 class PerformanceDynamic_qqm_0010(QqMusicCase):
     """Excel 7.0.2：QQ音乐播放、收藏及榜单浏览。"""
+    TRACE_LAST_STEP = 28
 
     @SeaOfStarsAW.function_log
     def run_case(self):
         for iteration in range(self.TEST_TIME):
             self.prepare_iteration()
-            with self.capture_trace_5s(iteration, 1):
+            with self.capture_trace(iteration, 1):
                 self.step(1, '启动QQ音乐')
                 self.start_qqmusic()
             self.step(2, '点击我的')
@@ -66,6 +67,6 @@ class PerformanceDynamic_qqm_0010(QqMusicCase):
                 self.fail('未进入音乐卡片分享页')
             self.step(27, '返回QQ音乐主界面')
             self.return_music_home()
-            with self.capture_trace_5s(iteration, 28):
+            with self.capture_trace(iteration, 28):
                 self.step(28, '滑动返回Home页')
                 self.launcher()

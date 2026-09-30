@@ -6,6 +6,7 @@ from cases.hongguo_common import HongguoCase
 
 class PerformanceDynamic_hongguomianfeiduanju_0010(HongguoCase):
     """Excel 7.0.2：浏览剧场榜单与观看历史。"""
+    TRACE_LAST_STEP = 21
 
     @SeaOfStarsAW.function_log
     def run_case(self):

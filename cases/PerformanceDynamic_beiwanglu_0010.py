@@ -4,6 +4,7 @@ from cases.beiwanglu_common import BeiwangluCase
 
 class PerformanceDynamic_beiwanglu_0010(BeiwangluCase):
     """Excel 7.0.2：备忘录新建待办事项。"""
+    TRACE_LAST_STEP = 10
 
     @SeaOfStarsAW.function_log
     def run_case(self):

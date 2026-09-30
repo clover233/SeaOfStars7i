@@ -2,7 +2,6 @@
 
 import logging
 import time
-from contextlib import contextmanager
 
 from cases.wda_case_common import WdaCase
 
@@ -10,18 +9,6 @@ from cases.wda_case_common import WdaCase
 class HuaweiHealthCase(WdaCase):
     PACKAGE = 'com.huawei.iossporthealth'
     APP_NAME = '华为运动健康'
-
-    @contextmanager
-    def capture_trace_5s(self, iteration, step_number):
-        """首尾维测打点至少覆盖 5 秒。"""
-        with self.capture_trace(iteration, step_number):
-            started_at = time.monotonic()
-            try:
-                yield
-            finally:
-                remaining = 5 - (time.monotonic() - started_at)
-                if remaining > 0:
-                    time.sleep(remaining)
 
     def prepare_iteration(self):
         try:

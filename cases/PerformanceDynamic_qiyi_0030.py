@@ -9,6 +9,7 @@ from cases.wda_case_common import WdaCase
 
 class PerformanceDynamic_qiyi_0030(WdaCase):
     """Excel 7.0.2：频道浏览，重复搜索并播放《大话天仙》。"""
+    TRACE_LAST_STEP = 13
 
     PACKAGE = 'com.qiyi.iphone'
     APP_NAME = '爱奇艺'

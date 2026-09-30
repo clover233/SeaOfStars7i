@@ -4,12 +4,13 @@ from cases.qqbrowser_common import QqBrowserCase
 
 class PerformanceDynamic_qqliulanqi_0010(QqBrowserCase):
     """Excel 7.0.2：QQ浏览器搜索并浏览学信网。"""
+    TRACE_LAST_STEP = 10
 
     @SeaOfStarsAW.function_log
     def run_case(self):
         for iteration in range(self.TEST_TIME):
             self.prepare_iteration()
-            with self.capture_trace_5s(iteration, 1):
+            with self.capture_trace(iteration, 1):
                 self.step(1, '启动QQ浏览器')
                 self.start_qqbrowser()
             self.step(2, '点击搜索框')
@@ -28,6 +29,6 @@ class PerformanceDynamic_qqliulanqi_0010(QqBrowserCase):
             self.browse_page(2, 2)
             self.step(9, '返回QQ浏览器主界面')
             self.return_browser_home()
-            with self.capture_trace_5s(iteration, 10):
+            with self.capture_trace(iteration, 10):
                 self.step(10, '滑动返回Home页')
                 self.launcher()

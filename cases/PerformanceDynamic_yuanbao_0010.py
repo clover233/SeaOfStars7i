@@ -4,6 +4,7 @@ from cases.yuanbao_common import YuanbaoCase
 
 class PerformanceDynamic_yuanbao_0010(YuanbaoCase):
     """Excel 7.0.2：腾讯元宝三轮问答与结果浏览。"""
+    TRACE_LAST_STEP = 9
 
     @SeaOfStarsAW.function_log
     def run_case(self):

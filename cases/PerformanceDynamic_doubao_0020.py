@@ -6,6 +6,7 @@ from cases.doubao_common import DoubaoCase
 
 class PerformanceDynamic_doubao_0020(DoubaoCase):
     """Excel 7.0.2：豆包拍照、选图合成视频并发起通话。"""
+    TRACE_LAST_STEP = 16
 
     @SeaOfStarsAW.function_log
     def run_case(self):

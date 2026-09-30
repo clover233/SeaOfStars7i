@@ -6,6 +6,7 @@ from cases.camera_common import CameraCase
 
 class PerformanceDynamic_camera_0040(CameraCase):
     """Excel 7.0.2：通过相机 AI 条或 Siri 咨询夕阳拍摄方法。"""
+    TRACE_LAST_STEP = 5
 
     @SeaOfStarsAW.function_log
     def run_case(self):

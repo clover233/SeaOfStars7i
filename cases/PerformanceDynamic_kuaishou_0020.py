@@ -4,12 +4,13 @@ from cases.kuaishou_common import KuaishouCase
 
 class PerformanceDynamic_kuaishou_0020(KuaishouCase):
     """Excel 7.0.2：搜索、直播榜和快手小店。"""
+    TRACE_LAST_STEP = 16
 
     @SeaOfStarsAW.function_log
     def run_case(self):
         for iteration in range(self.TEST_TIME):
             self.prepare_iteration()
-            with self.capture_trace_5s(iteration, 1):
+            with self.capture_trace(iteration, 1):
                 self.step(1, '启动快手')
                 self.start_app(wait=5)
             self.normalize_featured_after_launch()
@@ -41,6 +42,6 @@ class PerformanceDynamic_kuaishou_0020(KuaishouCase):
             self.open_add_to_bag()
             self.step(15, '返回快手主界面')
             self.return_main_from_shop()
-            with self.capture_trace_5s(iteration, 16):
+            with self.capture_trace(iteration, 16):
                 self.step(16, '滑动返回Home页')
                 self.launcher()

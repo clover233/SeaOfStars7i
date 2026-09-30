@@ -4,6 +4,7 @@ from cases.taptap_common import TapTapCase
 
 class PerformanceDynamic_taptap_0010(TapTapCase):
     """Excel 7.0.2：TapTap 搜索、评价、榜单、社区和个人页浏览。"""
+    TRACE_LAST_STEP = 14
 
     @SeaOfStarsAW.function_log
     def run_case(self):

@@ -6,6 +6,7 @@ from cases.hongguo_common import HongguoCase
 
 class PerformanceDynamic_hongguomianfeiduanju_0020(HongguoCase):
     """Excel 7.0.2：倍速、评论、搜索与横竖屏播放。"""
+    TRACE_LAST_STEP = 18
 
     @SeaOfStarsAW.function_log
     def run_case(self):

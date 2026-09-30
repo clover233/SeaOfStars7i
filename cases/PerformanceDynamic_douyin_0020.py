@@ -4,6 +4,7 @@ from cases.douyin_common import DouyinCase
 
 class PerformanceDynamic_douyin_0020(DouyinCase):
     """Excel 7.0.2：浏览抖音直播页面、直播间和小黄车。"""
+    TRACE_LAST_STEP = 9
 
     @SeaOfStarsAW.function_log
     def run_case(self):

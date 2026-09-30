@@ -4,6 +4,7 @@ from cases.bilibili_common import BilibiliCase
 
 class PerformanceDynamic_bilibili_0020(BilibiliCase):
     """Excel 7.0.2：浏览推荐视频、UP 主主页和评论。"""
+    TRACE_LAST_STEP = 12
 
     @SeaOfStarsAW.function_log
     def run_case(self):

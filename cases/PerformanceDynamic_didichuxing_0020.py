@@ -4,6 +4,7 @@ from cases.didi_common import DidiCase
 
 class PerformanceDynamic_didichuxing_0020(DidiCase):
     """Excel 7.0.2：浏览滴滴个人中心、出行服务、搜索和车主服务。"""
+    TRACE_LAST_STEP = 20
 
     @SeaOfStarsAW.function_log
     def run_case(self):

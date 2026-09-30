@@ -4,6 +4,7 @@ from cases.cloudmusic_common import CloudMusicCase
 
 class PerformanceDynamic_cloudmusic_0010(CloudMusicCase):
     """Excel 7.0.2：网易云音乐浏览并播放推荐歌单。"""
+    TRACE_LAST_STEP = 7
 
     @SeaOfStarsAW.function_log
     def run_case(self):

@@ -4,12 +4,13 @@ from cases.huaweihealth_common import HuaweiHealthCase
 
 class PerformanceDynamic_huaweihealth_0020(HuaweiHealthCase):
     """Excel 7.0.2：设备页重复进入扫一扫。"""
+    TRACE_LAST_STEP = 6
 
     @SeaOfStarsAW.function_log
     def run_case(self):
         for iteration in range(self.TEST_TIME):
             self.prepare_iteration()
-            with self.capture_trace_5s(iteration, 1):
+            with self.capture_trace(iteration, 1):
                 self.step(1, '启动运动健康')
                 self.start_app(wait=5)
             self.normalize_home_after_launch()
@@ -24,6 +25,6 @@ class PerformanceDynamic_huaweihealth_0020(HuaweiHealthCase):
                     self.open_more_functions()
             self.step(5, '返回运动健康主界面')
             self.return_health_main()
-            with self.capture_trace_5s(iteration, 6):
+            with self.capture_trace(iteration, 6):
                 self.step(6, '滑动返回Home页')
                 self.launcher()

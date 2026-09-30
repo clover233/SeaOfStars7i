@@ -6,6 +6,7 @@ from cases.autonavi_common import AutonaviCase
 
 class PerformanceDynamic_autonavi_0010(AutonaviCase):
     """Excel 7.0.2：高德地图导航至西安北站。"""
+    TRACE_LAST_STEP = 8
 
     @SeaOfStarsAW.function_log
     def run_case(self):
