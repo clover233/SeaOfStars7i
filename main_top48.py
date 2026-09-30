@@ -763,31 +763,50 @@ if __name__ == '__main__':
                         time.sleep(3)
                         succ_num += 1
                         result_dict['success'].append('1')
-                    except ElementNotFoundError as e:
-                        logging.error(e)
+                    except ElementNotFoundError:
+                        logging.exception('用例 %s 未找到元素', single_case.__name__)
                         result_dict['success'].append('0')
                         fail_num += 1
                         time.sleep(5)
-                        SeaOfStarsAW.stop_trace()
+                        try:
+                            SeaOfStarsAW.stop_trace()
+                        except Exception:
+                            logging.exception('失败后的 Trace 停止流程异常')
                     except TypeError:
+                        logging.exception('用例 %s 发生 TypeError，重试一次', single_case.__name__)
                         result_dict['success'].append('0')
                         time.sleep(5)
-                        case = single_case(Result_Dir_Path)
-                        case.set_up()
-                        case.run_case()
-                    except Exception as err:
+                        try:
+                            case = single_case(Result_Dir_Path)
+                            case.set_up()
+                            case.run_case()
+                        except Exception:
+                            logging.exception('用例 %s 重试失败', single_case.__name__)
+                            fail_num += 1
+                            try:
+                                SeaOfStarsAW.stop_trace()
+                            except Exception:
+                                logging.exception('重试失败后的 Trace 停止流程异常')
+                        else:
+                            result_dict['success'][-1] = '1'
+                            succ_num += 1
+                    except Exception:
                         result_dict['success'].append('0')
-                        logging.error(err)
+                        logging.exception('用例 %s 执行失败', single_case.__name__)
                         fail_num += 1
                         time.sleep(5)
-                        SeaOfStarsAW.stop_trace()
+                        try:
+                            SeaOfStarsAW.stop_trace()
+                        except Exception:
+                            logging.exception('失败后的 Trace 停止流程异常')
                     finally:
-                        SeaOfStarsAW.ut_device.home()
-                        #SeaOfStarsAW.swipe_to_launcher()
-                        #SeaOfStarsAW.go_home()
                         df = pd.DataFrame(result_dict)
                         df.to_excel(os.path.join(Result_Dir_Path,'result.xlsx'), index=False)
-                        pass
+                        try:
+                            SeaOfStarsAW.ut_device.home()
+                        except Exception:
+                            logging.exception('用例 %s 清理时返回桌面失败，请检查 WDA/USB 连接',
+                                              single_case.__name__)
 
     finally:
         stop_vmstats_collector(vmstats_process, vmstats_log)
